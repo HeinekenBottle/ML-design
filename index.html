@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Machine Learning Learning Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: rgba(10, 14, 39, 0.95);
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 2px solid #00d9ff;
+            z-index: 100;
+        }
+
+        .sidebar h1 {
+            color: #00d9ff;
+            font-size: 1.4em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .nav-item {
+            padding: 12px 15px;
+            margin: 8px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: rgba(0, 217, 255, 0.05);
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 217, 255, 0.15);
+            border-left-color: #00d9ff;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 217, 255, 0.2);
+            border-left-color: #00d9ff;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 40px;
+            width: calc(100% - 280px);
+        }
+
+        .section {
+            margin-bottom: 60px;
+            padding: 30px;
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 217, 255, 0.3);
+        }
+
+        .section h2 {
+            color: #00d9ff;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .section h3 {
+            color: #b366ff;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+        }
+
+        .section p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #c0c0c0;
+        }
+
+        /* Interactive Controls */
+        .controls {
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #00d9ff;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: rgba(0, 217, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00d9ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00d9ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+        }
+
+        /* Buttons */
+        .button {
+            padding: 12px 24px;
+            margin: 10px 10px 10px 0;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #00d9ff 0%, #b366ff 100%);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.secondary {
+            background: linear-gradient(135deg, #b366ff 0%, #ff66d9 100%);
+        }
+
+        /* Canvas */
+        canvas {
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            display: block;
+            margin: 20px 0;
+            max-width: 100%;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        .info-box.insight {
+            background: rgba(0, 217, 255, 0.1);
+            border-color: #00d9ff;
+        }
+
+        .info-box.insight::before {
+            content: "💡 ";
+        }
+
+        .info-box.try-this {
+            background: rgba(179, 102, 255, 0.1);
+            border-color: #b366ff;
+        }
+
+        .info-box.try-this::before {
+            content: "🔬 ";
+        }
+
+        .info-box.intuition {
+            background: rgba(255, 102, 217, 0.1);
+            border-color: #ff66d9;
+        }
+
+        .info-box.intuition::before {
+            content: "🧠 ";
+        }
+
+        /* Stats Display */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 217, 255, 0.3);
+        }
+
+        .stat-label {
+            color: #00d9ff;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+        }
+
+        /* Math Display */
+        .math {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            color: #00d9ff;
+        }
+
+        /* Progress Indicator */
+        .progress-bar {
+            height: 4px;
+            background: rgba(0, 217, 255, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d9ff 0%, #b366ff 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Attention Heatmap */
+        .heatmap {
+            display: grid;
+            gap: 2px;
+            margin: 20px 0;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        /* Network Diagram */
+        .network-layer {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .neuron {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d9ff 0%, #b366ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .neuron:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <h1>🧠 ML Learning</h1>
+            <div class="nav-item active" data-section="curve-fitting">1. Curve Fitting</div>
+            <div class="nav-item" data-section="gradient-descent">2. Gradient Descent</div>
+            <div class="nav-item" data-section="derivatives">3. Derivatives Explained</div>
+            <div class="nav-item" data-section="chain-rule">4. Chain Rule</div>
+            <div class="nav-item" data-section="comp-graph">5. Computational Graph</div>
+            <div class="nav-item" data-section="hyperparameters">6. Hyperparameters</div>
+            <div class="nav-item" data-section="forward-backward">7. Forward/Backward Pass</div>
+            <div class="nav-item" data-section="attention">8. Attention Mechanisms</div>
+            <div class="nav-item" data-section="deep-layers">9. Deep Layers</div>
+            <div class="nav-item" data-section="multi-task">10. Multi-Task Learning</div>
+            <div class="nav-item" data-section="logistic-linear">11. Logistic vs Linear</div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Section 1: Curve Fitting -->
+            <section id="curve-fitting" class="section">
+                <h2>1. Visual Curve Fitting Demonstration</h2>
+                <p>Learn how parameters affect curve fitting by adjusting polynomial coefficients in real-time.</p>
+
+                <div class="info-box insight">
+                    <strong>Key Insight:</strong> The loss function measures how well your curve fits the data points. Lower loss means a better fit!
+                </div>
+
+                <div class="controls">
+                    <h3>Polynomial Parameters</h3>
+                    <p class="math">y(x) = k₀ + k₁x + k₂x² + k₃x³ + k₄x⁴ + k₅x⁵</p>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>k₀ (constant)</span>
+                            <span id="k0-value">0.0</span>
+                        </div>
+                        <input type="range" id="k0" min="-2" max="2" step="0.1" value="0">
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>k₁ (linear)</span>
+                            <span id="k1-value">0.0</span>
+                        </div>
+                        <input type="range" id="k1" min="-2" max="2" step="0.1" value="0">
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>k₂ (quadratic)</span>
+                            <span id="k2-value">1.0</span>
+                        </div>
+                        <input type="range" id="k2" min="-2" max="2" step="0.1" value="1">
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>k₃ (cubic)</span>
+                            <span id="k3-value">0.0</span>
+                        </div>
+                        <input type="range" id="k3" min="-2" max="2" step="0.1" value="0">
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>k₄ (quartic)</span>
+                            <span id="k4-value">0.0</span>
+                        </div>
+                        <input type="range" id="k4" min="-2" max="2" step="0.1" value="0">
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>k₅ (quintic)</span>
+                            <span id="k5-value">0.0</span>
+                        </div>
+                        <input type="range" id="k5" min="-2" max="2" step="0.1" value="0">
+                    </div>
+
+                    <button class="button" onclick="resetCurveFitting()">Reset Parameters</button>
+                    <button class="button secondary" onclick="generateNewData()">New Data Points</button>
+                </div>
+
+                <canvas id="curveFittingCanvas" width="800" height="500"></canvas>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Mean Squared Error (Loss)</div>
+                        <div class="stat-value" id="mse-value">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Number of Data Points</div>
+                        <div class="stat-value" id="num-points">20</div>
+                    </div>
+                </div>
+
+                <div class="info-box try-this">
+                    <strong>Try This:</strong> Start with just k₂ = 1.0 to create a parabola. Then add k₁ to tilt it. Notice how the loss changes!
+                </div>
+            </section>
+
+            <!-- Section 2: Gradient Descent -->
+            <section id="gradient-descent" class="section">
+                <h2>2. Gradient Descent Visualization</h2>
+                <p>See how gradient descent finds the optimal parameters by following the slope downhill.</p>
+
+                <div class="info-box intuition">
+                    <strong>Intuition:</strong> Gradient descent is like being blindfolded on a hill and feeling which way is downward with your feet, then taking steps in that direction to reach the valley.
+                </div>
+
+                <div class="controls">
+                    <h3>Controls</h3>
+                    <button class="button" onclick="runGradientDescent()">Run Auto Mode (Use Gradients)</button>
+                    <button class="button secondary" onclick="runRandomSearch()">Run Manual Mode (Random)</button>
+                    <button class="button" onclick="stepGradientDescent()">Single Step</button>
+                    <button class="button" onclick="resetGradientDescent()">Reset Position</button>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Learning Rate</span>
+                            <span id="lr-value">0.1</span>
+                        </div>
+                        <input type="range" id="learning-rate" min="0.01" max="0.5" step="0.01" value="0.1">
+                    </div>
+
+                    <p style="margin-top: 15px; color: #00d9ff;">Click on the surface to set a starting position!</p>
+                </div>
+
+                <canvas id="gradientDescentCanvas" width="800" height="500"></canvas>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Current Loss</div>
+                        <div class="stat-value" id="gd-loss">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">∂Loss/∂k₁</div>
+                        <div class="stat-value" id="grad-k1">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">∂Loss/∂k₂</div>
+                        <div class="stat-value" id="grad-k2">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Iterations</div>
+                        <div class="stat-value" id="iterations">0</div>
+                    </div>
+                </div>
+
+                <div class="info-box insight">
+                    <strong>Key Insight:</strong> The gradients (∂Loss/∂k) tell us which direction to adjust each parameter. Negative gradient means increase the parameter; positive means decrease it.
+                </div>
+            </section>
+
+            <!-- Section 3: Derivatives -->
+            <section id="derivatives" class="section">
+                <h2>3. What ARE Derivatives in Machine Learning?</h2>
+                <p>Derivatives tell you which way to turn the knob and how much it will affect the output.</p>
+
+                <div class="info-box intuition">
+                    <strong>Intuition:</strong> A derivative is like asking "If I take one small step to the right, will I go up or down, and by how much?"
+                </div>
+
+                <div class="controls">
+                    <h3>Interactive Derivative Explorer</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Parameter Value (x)</span>
+                            <span id="deriv-x-value">0.0</span>
+                        </div>
+                        <input type="range" id="deriv-x" min="-3" max="3" step="0.1" value="0">
+                    </div>
+                </div>
+
+                <canvas id="derivativeCanvas" width="800" height="500"></canvas>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Function Value f(x)</div>
+                        <div class="stat-value" id="func-value">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Derivative f'(x)</div>
+                        <div class="stat-value" id="deriv-value">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Slope (Rise/Run)</div>
+                        <div class="stat-value" id="slope-value">0.00</div>
+                    </div>
+                </div>
+
+                <div class="info-box try-this">
+                    <strong>Try This:</strong> Move the slider and watch the tangent line. When the derivative is positive, the function is increasing. When negative, it's decreasing. At zero, you're at a local minimum or maximum!
+                </div>
+
+                <p style="margin-top: 20px;">We're using the function <span class="math">f(x) = x² - 2x + 1</span>, which has derivative <span class="math">f'(x) = 2x - 2</span></p>
+            </section>
+
+            <!-- Section 4: Chain Rule -->
+            <section id="chain-rule" class="section">
+                <h2>4. Chain Rule Visualization</h2>
+                <p>The chain rule lets us compute gradients through multiple connected operations.</p>
+
+                <div class="info-box intuition">
+                    <strong>Gear Wheels Metaphor:</strong> When you turn the first wheel, it turns the second wheel. The amount it turns depends on the gear ratio (derivative). Chain multiple gears together, and you multiply all the ratios!
+                </div>
+
+                <canvas id="chainRuleCanvas" width="800" height="400"></canvas>
+
+                <div class="controls">
+                    <h3>Computational Graph</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Input (x)</span>
+                            <span id="chain-x-value">2.0</span>
+                        </div>
+                        <input type="range" id="chain-x" min="-5" max="5" step="0.5" value="2">
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Weight (w)</span>
+                            <span id="chain-w-value">1.5</span>
+                        </div>
+                        <input type="range" id="chain-w" min="-3" max="3" step="0.5" value="1.5">
+                    </div>
+
+                    <button class="button" onclick="animateForwardPass()">▶️ Forward Pass</button>
+                    <button class="button secondary" onclick="animateBackwardPass()">◀️ Backward Pass</button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">z = x × w</div>
+                        <div class="stat-value" id="z-value">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">a = z²</div>
+                        <div class="stat-value" id="a-value">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Loss = (a - 10)²</div>
+                        <div class="stat-value" id="chain-loss">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">∂Loss/∂w</div>
+                        <div class="stat-value" id="chain-grad">0.00</div>
+                    </div>
+                </div>
+
+                <div class="info-box insight">
+                    <strong>Key Insight:</strong> Chain rule: ∂Loss/∂w = (∂Loss/∂a) × (∂a/∂z) × (∂z/∂w). We multiply derivatives along the path from output back to input!
+                </div>
+            </section>
+
+            <!-- Section 5: Computational Graph Builder -->
+            <section id="comp-graph" class="section">
+                <h2>5. Computational Graph Builder</h2>
+                <p>Build your own computational graph and see gradients flow through it!</p>
+
+                <div class="info-box try-this">
+                    <strong>Try This:</strong> Click the operations below to build a computation graph, then run forward and backward passes.
+                </div>
+
+                <div class="controls">
+                    <h3>Available Operations</h3>
+                    <button class="button" onclick="addGraphNode('add')">+ Add</button>
+                    <button class="button" onclick="addGraphNode('multiply')">× Multiply</button>
+                    <button class="button" onclick="addGraphNode('square')">x² Square</button>
+                    <button class="button" onclick="addGraphNode('exp')">eˣ Exp</button>
+                    <button class="button secondary" onclick="clearGraph()">Clear Graph</button>
+
+                    <div style="margin-top: 15px;">
+                        <button class="button" onclick="runGraphForward()">Forward Pass →</button>
+                        <button class="button" onclick="runGraphBackward()">← Backward Pass</button>
+                    </div>
+                </div>
+
+                <canvas id="compGraphCanvas" width="800" height="400"></canvas>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Graph Nodes</div>
+                        <div class="stat-value" id="graph-nodes">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Output Value</div>
+                        <div class="stat-value" id="graph-output">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Input Gradient</div>
+                        <div class="stat-value" id="graph-grad">0.00</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Hyperparameters -->
+            <section id="hyperparameters" class="section">
+                <h2>6. Hyperparameters vs Parameters</h2>
+                <p>Understand the crucial difference between what we optimize and how we optimize it.</p>
+
+                <div class="info-box insight">
+                    <strong>Key Distinction:</strong><br>
+                    <strong>Parameters</strong> (k₀, k₁, k₂...): The knobs we're optimizing to fit data<br>
+                    <strong>Hyperparameters</strong>: Settings that control HOW we optimize (learning rate, batch size, etc.)
+                </div>
+
+                <div class="controls">
+                    <h3>Learning Rate Exploration</h3>
+                    <p>Watch how different learning rates affect convergence:</p>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Learning Rate</span>
+                            <span id="hyper-lr-value">0.1</span>
+                        </div>
+                        <input type="range" id="hyper-lr" min="0.001" max="1.0" step="0.001" value="0.1">
+                    </div>
+
+                    <button class="button" onclick="runWithLearningRate()">Run Optimization</button>
+                    <button class="button secondary" onclick="resetHyperparamDemo()">Reset</button>
+                </div>
+
+                <canvas id="hyperparamCanvas" width="800" height="500"></canvas>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Final Loss</div>
+                        <div class="stat-value" id="hyper-loss">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Iterations to Converge</div>
+                        <div class="stat-value" id="hyper-iters">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Convergence Status</div>
+                        <div class="stat-value" id="hyper-status" style="font-size: 1em;">-</div>
+                    </div>
+                </div>
+
+                <div class="info-box try-this">
+                    <strong>Try This:</strong><br>
+                    • Learning rate too high (>0.5): Watch it oscillate and diverge!<br>
+                    • Learning rate too low (<0.01): Converges but very slowly<br>
+                    • Just right (~0.1): Smooth, fast convergence
+                </div>
+            </section>
+
+            <!-- Section 7: Forward/Backward Pass -->
+            <section id="forward-backward" class="section">
+                <h2>7. Forward and Backward Pass Breakdown</h2>
+                <p>See how data flows forward through a network, and gradients flow backward.</p>
+
+                <div class="info-box intuition">
+                    <strong>Forward Pass:</strong> Computing predictions from inputs<br>
+                    <strong>Backward Pass:</strong> Computing how to improve our parameters
+                </div>
+
+                <canvas id="forwardBackwardCanvas" width="800" height="500"></canvas>
+
+                <div class="controls">
+                    <button class="button" onclick="stepForward()">Step Forward →</button>
+                    <button class="button" onclick="stepBackward()">← Step Backward</button>
+                    <button class="button secondary" onclick="autoPlayPasses()">▶️ Auto Play</button>
+                    <button class="button" onclick="resetPasses()">Reset</button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Current Phase</div>
+                        <div class="stat-value" id="pass-phase" style="font-size: 1em;">Forward</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Layer</div>
+                        <div class="stat-value" id="pass-layer">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Prediction</div>
+                        <div class="stat-value" id="pass-pred">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Loss</div>
+                        <div class="stat-value" id="pass-loss">0.00</div>
+                    </div>
+                </div>
+
+                <div class="info-box insight">
+                    <strong>Key Insight:</strong> The forward pass transforms inputs into predictions. The backward pass tells us how to adjust each weight to reduce the error.
+                </div>
+            </section>
+
+            <!-- Section 8: Attention Mechanisms -->
+            <section id="attention" class="section">
+                <h2>8. Attention Mechanisms in Transformers</h2>
+                <p>Attention is about focusing on the most relevant parts of the input.</p>
+
+                <div class="info-box intuition">
+                    <strong>Intuition:</strong> When reading "The animal didn't cross the street because it was too tired", attention helps the model know "it" refers to "animal", not "street".
+                </div>
+
+                <div class="controls">
+                    <h3>Self-Attention Demo</h3>
+                    <p>Click on a word to see what it attends to:</p>
+                    <div id="word-sequence" style="display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+                        <button class="button" onclick="selectWord(0)">The</button>
+                        <button class="button" onclick="selectWord(1)">cat</button>
+                        <button class="button" onclick="selectWord(2)">sat</button>
+                        <button class="button" onclick="selectWord(3)">on</button>
+                        <button class="button" onclick="selectWord(4)">the</button>
+                        <button class="button" onclick="selectWord(5)">mat</button>
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Number of Attention Heads</span>
+                            <span id="num-heads-value">4</span>
+                        </div>
+                        <input type="range" id="num-heads" min="1" max="8" step="1" value="4">
+                    </div>
+                </div>
+
+                <canvas id="attentionCanvas" width="800" height="400"></canvas>
+
+                <div class="info-box insight">
+                    <strong>Multi-Head Attention:</strong> Different heads can focus on different relationships:
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>Head 1: Subject-verb relationships</li>
+                        <li>Head 2: Noun-adjective pairs</li>
+                        <li>Head 3: Long-range dependencies</li>
+                        <li>Head 4: Local context</li>
+                    </ul>
+                </div>
+
+                <p style="margin-top: 20px;" class="math">Attention(Q, K, V) = softmax(QK^T / √d_k) × V</p>
+            </section>
+
+            <!-- Section 9: Deep Layers -->
+            <section id="deep-layers" class="section">
+                <h2>9. Deep Layers and Network Depth</h2>
+                <p>Why do we stack many layers? What happens as networks get deeper?</p>
+
+                <div class="info-box intuition">
+                    <strong>Hierarchical Learning:</strong><br>
+                    Layer 1: Simple edges and colors<br>
+                    Layer 2: Textures and patterns<br>
+                    Layer 3: Object parts (eyes, wheels)<br>
+                    Layer 4: Complete objects (faces, cars)
+                </div>
+
+                <div class="controls">
+                    <h3>Network Architecture Builder</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Number of Layers</span>
+                            <span id="num-layers-value">3</span>
+                        </div>
+                        <input type="range" id="num-layers" min="1" max="10" step="1" value="3">
+                    </div>
+
+                    <button class="button" onclick="visualizeGradientFlow()">Show Gradient Flow</button>
+                    <button class="button secondary" onclick="toggleResidual()">Toggle Residual Connections</button>
+                </div>
+
+                <canvas id="deepLayersCanvas" width="800" height="500"></canvas>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Layer 1 Gradient</div>
+                        <div class="stat-value" id="layer1-grad">1.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Layer 5 Gradient</div>
+                        <div class="stat-value" id="layer5-grad">0.10</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Layer 10 Gradient</div>
+                        <div class="stat-value" id="layer10-grad">0.01</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Residual Connections</div>
+                        <div class="stat-value" id="residual-status" style="font-size: 1em;">Off</div>
+                    </div>
+                </div>
+
+                <div class="info-box insight">
+                    <strong>Vanishing Gradients:</strong> Without techniques like residual connections, gradients can become extremely small in deep networks, making early layers hard to train.
+                </div>
+            </section>
+
+            <!-- Section 10: Multi-Task Learning -->
+            <section id="multi-task" class="section">
+                <h2>10. Multi-Task Learning</h2>
+                <p>Training one model to solve multiple related tasks simultaneously.</p>
+
+                <div class="info-box intuition">
+                    <strong>Intuition:</strong> Like a student learning math and physics together - the shared knowledge of equations helps both subjects!
+                </div>
+
+                <canvas id="multiTaskCanvas" width="800" height="400"></canvas>
+
+                <div class="controls">
+                    <h3>Task Configuration</h3>
+                    <label style="display: flex; align-items: center; margin: 10px 0;">
+                        <input type="checkbox" id="task1" checked onchange="updateTasks()" style="margin-right: 10px; width: 20px; height: 20px;">
+                        <span>Task 1: Classification (Cat vs Dog)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin: 10px 0;">
+                        <input type="checkbox" id="task2" checked onchange="updateTasks()" style="margin-right: 10px; width: 20px; height: 20px;">
+                        <span>Task 2: Segmentation (Find Objects)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin: 10px 0;">
+                        <input type="checkbox" id="task3" checked onchange="updateTasks()" style="margin-right: 10px; width: 20px; height: 20px;">
+                        <span>Task 3: Depth Estimation</span>
+                    </label>
+
+                    <button class="button" onclick="trainMultiTask()">Train Multi-Task Model</button>
+                    <button class="button secondary" onclick="compareWithSingleTask()">Compare with Single-Task</button>
+                </div>
+
+                <div class="info-box insight">
+                    <strong>When to Separate Tasks:</strong><br>
+                    • Conflicting gradients pulling in opposite directions<br>
+                    • Very different data distributions<br>
+                    • Tasks at different scales or difficulties<br>
+                    • One task dominates and hurts others
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Shared Parameters</div>
+                        <div class="stat-value">85%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Task-Specific Parameters</div>
+                        <div class="stat-value">15%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Training Efficiency</div>
+                        <div class="stat-value">2.3x</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 11: Logistic vs Linear -->
+            <section id="logistic-linear" class="section">
+                <h2>11. Logistic vs Linear Problems</h2>
+                <p>When to use regression (linear) vs classification (logistic).</p>
+
+                <div class="info-box intuition">
+                    <strong>Quick Guide:</strong><br>
+                    Predicting <strong>numbers</strong>? → Linear Regression<br>
+                    Predicting <strong>categories</strong>? → Logistic Classification
+                </div>
+
+                <canvas id="logisticLinearCanvas" width="800" height="400"></canvas>
+
+                <div class="controls">
+                    <h3>Problem Type</h3>
+                    <button class="button" onclick="showLinearExample()">Linear: Predict House Price</button>
+                    <button class="button secondary" onclick="showLogisticExample()">Logistic: Classify Spam Email</button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Problem Type</div>
+                        <div class="stat-value" id="problem-type" style="font-size: 1em;">Linear</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Loss Function</div>
+                        <div class="stat-value" id="loss-function" style="font-size: 1em;">MSE</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Output Range</div>
+                        <div class="stat-value" id="output-range" style="font-size: 0.9em;">(-∞, +∞)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Activation</div>
+                        <div class="stat-value" id="activation" style="font-size: 1em;">None</div>
+                    </div>
+                </div>
+
+                <div class="info-box insight">
+                    <strong>Key Differences:</strong><br><br>
+                    <strong>Linear Regression:</strong><br>
+                    • Output: Continuous values<br>
+                    • Example: Price ($100-$500k), Temperature (0-100°C)<br>
+                    • Loss: Mean Squared Error (MSE)<br>
+                    • No activation function needed<br><br>
+
+                    <strong>Logistic Classification:</strong><br>
+                    • Output: Probabilities (0-1) or categories<br>
+                    • Example: Spam/Not Spam, Cat/Dog/Bird<br>
+                    • Loss: Cross-Entropy<br>
+                    • Activation: Sigmoid (binary) or Softmax (multi-class)
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // ===== GLOBAL STATE =====
+        let curveFittingParams = {k0: 0, k1: 0, k2: 1, k3: 0, k4: 0, k5: 0};
+        let dataPoints = [];
+        let gdState = {k1: 0, k2: 0, lr: 0.1, path: [], iterations: 0, isRunning: false};
+        let chainRuleState = {x: 2, w: 1.5};
+        let graphNodes = [];
+        let hyperparamState = {history: []};
+        let passState = {phase: 'forward', layer: 0, isPlaying: false};
+        let attentionState = {selectedWord: 0, numHeads: 4};
+        let deepLayerState = {numLayers: 3, residual: false};
+        let currentProblemType = 'linear';
+
+        // ===== NAVIGATION =====
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const sectionId = this.getAttribute('data-section');
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(sectionId).scrollIntoView({behavior: 'smooth'});
+            });
+        });
+
+        // Progress bar
+        window.addEventListener('scroll', function() {
+            const winScroll = document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('progressFill').style.width = scrolled + '%';
+        });
+
+        // ===== SECTION 1: CURVE FITTING =====
+        function initCurveFitting() {
+            generateNewData();
+            const sliders = ['k0', 'k1', 'k2', 'k3', 'k4', 'k5'];
+            sliders.forEach(param => {
+                const slider = document.getElementById(param);
+                slider.addEventListener('input', function() {
+                    curveFittingParams[param] = parseFloat(this.value);
+                    document.getElementById(param + '-value').textContent = this.value;
+                    drawCurveFitting();
+                });
+            });
+            drawCurveFitting();
+        }
+
+        function generateNewData() {
+            dataPoints = [];
+            for (let i = 0; i < 20; i++) {
+                const x = (Math.random() - 0.5) * 4;
+                const y = x * x + (Math.random() - 0.5) * 2;
+                dataPoints.push({x, y});
+            }
+            drawCurveFitting();
+        }
+
+        function resetCurveFitting() {
+            curveFittingParams = {k0: 0, k1: 0, k2: 1, k3: 0, k4: 0, k5: 0};
+            ['k0', 'k1', 'k2', 'k3', 'k4', 'k5'].forEach(param => {
+                document.getElementById(param).value = curveFittingParams[param];
+                document.getElementById(param + '-value').textContent = curveFittingParams[param].toFixed(1);
+            });
+            drawCurveFitting();
+        }
+
+        function polynomial(x, params) {
+            return params.k0 + params.k1 * x + params.k2 * x * x +
+                   params.k3 * Math.pow(x, 3) + params.k4 * Math.pow(x, 4) +
+                   params.k5 * Math.pow(x, 5);
+        }
+
+        function drawCurveFitting() {
+            const canvas = document.getElementById('curveFittingCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            // Grid
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * h / 10);
+                ctx.lineTo(w, i * h / 10);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(i * w / 10, 0);
+                ctx.lineTo(i * w / 10, h);
+                ctx.stroke();
+            }
+
+            // Axes
+            const originX = w / 2, originY = h / 2;
+            const scale = 100;
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, originY);
+            ctx.lineTo(w, originY);
+            ctx.moveTo(originX, 0);
+            ctx.lineTo(originX, h);
+            ctx.stroke();
+
+            // Draw curve
+            ctx.strokeStyle = '#00d9ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let px = 0; px < w; px++) {
+                const x = (px - originX) / scale;
+                const y = polynomial(x, curveFittingParams);
+                const py = originY - y * scale;
+                if (px === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Draw data points and error lines
+            let mse = 0;
+            dataPoints.forEach(point => {
+                const px = originX + point.x * scale;
+                const py = originY - point.y * scale;
+                const predictedY = polynomial(point.x, curveFittingParams);
+                const predictedPy = originY - predictedY * scale;
+
+                // Error line
+                ctx.strokeStyle = 'rgba(255, 102, 217, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(px, predictedPy);
+                ctx.stroke();
+
+                // Data point
+                ctx.fillStyle = '#ff66d9';
+                ctx.beginPath();
+                ctx.arc(px, py, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Calculate MSE
+                const error = point.y - predictedY;
+                mse += error * error;
+            });
+
+            mse /= dataPoints.length;
+            document.getElementById('mse-value').textContent = mse.toFixed(2);
+            document.getElementById('num-points').textContent = dataPoints.length;
+        }
+
+        // ===== SECTION 2: GRADIENT DESCENT =====
+        function initGradientDescent() {
+            const canvas = document.getElementById('gradientDescentCanvas');
+            const lrSlider = document.getElementById('learning-rate');
+
+            lrSlider.addEventListener('input', function() {
+                gdState.lr = parseFloat(this.value);
+                document.getElementById('lr-value').textContent = this.value;
+            });
+
+            canvas.addEventListener('click', function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const w = canvas.width, h = canvas.height;
+
+                gdState.k1 = ((x / w) - 0.5) * 6;
+                gdState.k2 = ((y / h) - 0.5) * 6;
+                gdState.path = [{k1: gdState.k1, k2: gdState.k2}];
+                gdState.iterations = 0;
+                drawGradientDescent();
+            });
+
+            resetGradientDescent();
+        }
+
+        function resetGradientDescent() {
+            gdState = {k1: 2, k2: 2, lr: 0.1, path: [{k1: 2, k2: 2}], iterations: 0, isRunning: false};
+            drawGradientDescent();
+        }
+
+        function lossFunction(k1, k2) {
+            return k1 * k1 + k2 * k2 + Math.sin(k1) + Math.cos(k2);
+        }
+
+        function computeGradients(k1, k2) {
+            const eps = 0.0001;
+            const loss = lossFunction(k1, k2);
+            const grad_k1 = (lossFunction(k1 + eps, k2) - loss) / eps;
+            const grad_k2 = (lossFunction(k1, k2 + eps) - loss) / eps;
+            return {grad_k1, grad_k2};
+        }
+
+        function stepGradientDescent() {
+            const {grad_k1, grad_k2} = computeGradients(gdState.k1, gdState.k2);
+            gdState.k1 -= gdState.lr * grad_k1;
+            gdState.k2 -= gdState.lr * grad_k2;
+            gdState.path.push({k1: gdState.k1, k2: gdState.k2});
+            gdState.iterations++;
+            drawGradientDescent();
+        }
+
+        function runGradientDescent() {
+            if (gdState.isRunning) return;
+            gdState.isRunning = true;
+
+            const interval = setInterval(() => {
+                stepGradientDescent();
+                const loss = lossFunction(gdState.k1, gdState.k2);
+
+                if (loss < 0.01 || gdState.iterations > 100) {
+                    gdState.isRunning = false;
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+
+        function runRandomSearch() {
+            if (gdState.isRunning) return;
+            gdState.isRunning = true;
+
+            const interval = setInterval(() => {
+                gdState.k1 += (Math.random() - 0.5) * 0.5;
+                gdState.k2 += (Math.random() - 0.5) * 0.5;
+                gdState.path.push({k1: gdState.k1, k2: gdState.k2});
+                gdState.iterations++;
+                drawGradientDescent();
+
+                if (gdState.iterations > 100) {
+                    gdState.isRunning = false;
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+
+        function drawGradientDescent() {
+            const canvas = document.getElementById('gradientDescentCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw loss surface contours
+            const resolution = 40;
+            for (let i = 0; i < resolution; i++) {
+                for (let j = 0; j < resolution; j++) {
+                    const k1 = (i / resolution - 0.5) * 6;
+                    const k2 = (j / resolution - 0.5) * 6;
+                    const loss = lossFunction(k1, k2);
+                    const intensity = Math.max(0, Math.min(1, 1 - loss / 10));
+
+                    const r = Math.floor(intensity * 0 + (1 - intensity) * 179);
+                    const g = Math.floor(intensity * 217 + (1 - intensity) * 102);
+                    const b = Math.floor(intensity * 255 + (1 - intensity) * 255);
+
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    ctx.fillRect(i * w / resolution, j * h / resolution,
+                                w / resolution + 1, h / resolution + 1);
+                }
+            }
+
+            // Draw path
+            if (gdState.path.length > 1) {
+                ctx.strokeStyle = '#ff66d9';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                gdState.path.forEach((point, i) => {
+                    const px = (point.k1 / 6 + 0.5) * w;
+                    const py = (point.k2 / 6 + 0.5) * h;
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                });
+                ctx.stroke();
+
+                // Draw points along path
+                gdState.path.forEach((point, i) => {
+                    const px = (point.k1 / 6 + 0.5) * w;
+                    const py = (point.k2 / 6 + 0.5) * h;
+                    ctx.fillStyle = i === gdState.path.length - 1 ? '#ff66d9' : 'rgba(255, 102, 217, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(px, py, i === gdState.path.length - 1 ? 8 : 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // Update stats
+            const loss = lossFunction(gdState.k1, gdState.k2);
+            const {grad_k1, grad_k2} = computeGradients(gdState.k1, gdState.k2);
+            document.getElementById('gd-loss').textContent = loss.toFixed(2);
+            document.getElementById('grad-k1').textContent = grad_k1.toFixed(3);
+            document.getElementById('grad-k2').textContent = grad_k2.toFixed(3);
+            document.getElementById('iterations').textContent = gdState.iterations;
+        }
+
+        // ===== SECTION 3: DERIVATIVES =====
+        function initDerivatives() {
+            const slider = document.getElementById('deriv-x');
+            slider.addEventListener('input', function() {
+                document.getElementById('deriv-x-value').textContent = this.value;
+                drawDerivative();
+            });
+            drawDerivative();
+        }
+
+        function drawDerivative() {
+            const canvas = document.getElementById('derivativeCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            const originX = w / 2, originY = h * 0.7;
+            const scale = 60;
+
+            // Grid
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = -3; i <= 3; i++) {
+                const px = originX + i * scale;
+                ctx.beginPath();
+                ctx.moveTo(px, 0);
+                ctx.lineTo(px, h);
+                ctx.stroke();
+            }
+
+            // Axes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, originY);
+            ctx.lineTo(w, originY);
+            ctx.moveTo(originX, 0);
+            ctx.lineTo(originX, h);
+            ctx.stroke();
+
+            // Function: f(x) = x^2 - 2x + 1
+            ctx.strokeStyle = '#00d9ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let px = 0; px < w; px++) {
+                const x = (px - originX) / scale;
+                const y = x * x - 2 * x + 1;
+                const py = originY - y * scale;
+                if (px === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Current point
+            const x = parseFloat(document.getElementById('deriv-x').value);
+            const y = x * x - 2 * x + 1;
+            const derivative = 2 * x - 2;
+
+            const px = originX + x * scale;
+            const py = originY - y * scale;
+
+            // Tangent line
+            ctx.strokeStyle = '#b366ff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let dx = -2; dx <= 2; dx += 0.1) {
+                const tx = x + dx;
+                const ty = y + derivative * dx;
+                const tpx = originX + tx * scale;
+                const tpy = originY - ty * scale;
+                if (dx === -2) ctx.moveTo(tpx, tpy);
+                else ctx.lineTo(tpx, tpy);
+            }
+            ctx.stroke();
+
+            // Point
+            ctx.fillStyle = '#ff66d9';
+            ctx.beginPath();
+            ctx.arc(px, py, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Labels
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '16px monospace';
+            ctx.fillText(`f(x) = x² - 2x + 1`, 20, 30);
+            ctx.fillStyle = '#b366ff';
+            ctx.fillText(`f'(x) = 2x - 2 (tangent line)`, 20, 55);
+
+            // Update stats
+            document.getElementById('func-value').textContent = y.toFixed(2);
+            document.getElementById('deriv-value').textContent = derivative.toFixed(2);
+            document.getElementById('slope-value').textContent = derivative.toFixed(2);
+        }
+
+        // ===== SECTION 4: CHAIN RULE =====
+        function initChainRule() {
+            ['chain-x', 'chain-w'].forEach(id => {
+                const slider = document.getElementById(id);
+                slider.addEventListener('input', function() {
+                    document.getElementById(id + '-value').textContent = this.value;
+                    if (id === 'chain-x') chainRuleState.x = parseFloat(this.value);
+                    else chainRuleState.w = parseFloat(this.value);
+                    drawChainRule();
+                });
+            });
+            drawChainRule();
+        }
+
+        function drawChainRule() {
+            const canvas = document.getElementById('chainRuleCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            const nodes = [
+                {x: 100, y: h/2 - 50, label: 'x', value: chainRuleState.x},
+                {x: 100, y: h/2 + 50, label: 'w', value: chainRuleState.w},
+                {x: 250, y: h/2, label: 'z = x×w', value: chainRuleState.x * chainRuleState.w},
+                {x: 450, y: h/2, label: 'a = z²', value: Math.pow(chainRuleState.x * chainRuleState.w, 2)},
+                {x: 650, y: h/2, label: 'L = (a-10)²', value: Math.pow(Math.pow(chainRuleState.x * chainRuleState.w, 2) - 10, 2)}
+            ];
+
+            // Draw connections
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.5)';
+            ctx.lineWidth = 3;
+            [[0, 2], [1, 2], [2, 3], [3, 4]].forEach(([from, to]) => {
+                ctx.beginPath();
+                ctx.moveTo(nodes[from].x, nodes[from].y);
+                ctx.lineTo(nodes[to].x, nodes[to].y);
+                ctx.stroke();
+            });
+
+            // Draw nodes
+            nodes.forEach(node => {
+                ctx.fillStyle = 'rgba(0, 217, 255, 0.2)';
+                ctx.strokeStyle = '#00d9ff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 40, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(node.label, node.x, node.y - 5);
+                ctx.fillText(node.value.toFixed(2), node.x, node.y + 15);
+            });
+
+            // Update stats
+            const z = chainRuleState.x * chainRuleState.w;
+            const a = z * z;
+            const loss = (a - 10) * (a - 10);
+            const dL_da = 2 * (a - 10);
+            const da_dz = 2 * z;
+            const dz_dw = chainRuleState.x;
+            const dL_dw = dL_da * da_dz * dz_dw;
+
+            document.getElementById('z-value').textContent = z.toFixed(2);
+            document.getElementById('a-value').textContent = a.toFixed(2);
+            document.getElementById('chain-loss').textContent = loss.toFixed(2);
+            document.getElementById('chain-grad').textContent = dL_dw.toFixed(2);
+        }
+
+        function animateForwardPass() {
+            alert('Forward pass: Data flows left to right, computing z, then a, then Loss!');
+        }
+
+        function animateBackwardPass() {
+            alert('Backward pass: Gradients flow right to left using chain rule!');
+        }
+
+        // ===== SECTION 5: COMPUTATIONAL GRAPH =====
+        function addGraphNode(type) {
+            graphNodes.push({type, x: Math.random() * 600 + 100, y: Math.random() * 300 + 50});
+            document.getElementById('graph-nodes').textContent = graphNodes.length;
+            drawCompGraph();
+        }
+
+        function clearGraph() {
+            graphNodes = [];
+            document.getElementById('graph-nodes').textContent = 0;
+            drawCompGraph();
+        }
+
+        function runGraphForward() {
+            alert('Running forward pass through your computational graph!');
+        }
+
+        function runGraphBackward() {
+            alert('Running backward pass - computing gradients!');
+        }
+
+        function drawCompGraph() {
+            const canvas = document.getElementById('compGraphCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            if (graphNodes.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '20px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Click operations above to build your graph!', w/2, h/2);
+                return;
+            }
+
+            // Draw nodes
+            graphNodes.forEach((node, i) => {
+                ctx.fillStyle = 'rgba(179, 102, 255, 0.3)';
+                ctx.strokeStyle = '#b366ff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(node.type, node.x, node.y + 5);
+            });
+
+            // Draw connections
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.3)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < graphNodes.length - 1; i++) {
+                ctx.beginPath();
+                ctx.moveTo(graphNodes[i].x, graphNodes[i].y);
+                ctx.lineTo(graphNodes[i+1].x, graphNodes[i+1].y);
+                ctx.stroke();
+            }
+        }
+
+        // ===== SECTION 6: HYPERPARAMETERS =====
+        function initHyperparameters() {
+            const slider = document.getElementById('hyper-lr');
+            slider.addEventListener('input', function() {
+                document.getElementById('hyper-lr-value').textContent = this.value;
+            });
+            drawHyperparamCanvas();
+        }
+
+        function runWithLearningRate() {
+            hyperparamState.history = [];
+            const lr = parseFloat(document.getElementById('hyper-lr').value);
+            let k = 3.0;
+
+            for (let i = 0; i < 50; i++) {
+                const loss = k * k;
+                hyperparamState.history.push({k, loss});
+                const grad = 2 * k;
+                k -= lr * grad;
+
+                if (Math.abs(loss) < 0.01) {
+                    document.getElementById('hyper-status').textContent = 'Converged!';
+                    document.getElementById('hyper-iters').textContent = i + 1;
+                    break;
+                } else if (i === 49) {
+                    if (Math.abs(k) > 10) {
+                        document.getElementById('hyper-status').textContent = 'Diverged!';
+                    } else {
+                        document.getElementById('hyper-status').textContent = 'Too Slow';
+                    }
+                    document.getElementById('hyper-iters').textContent = '>50';
+                }
+            }
+
+            const finalLoss = hyperparamState.history[hyperparamState.history.length - 1].loss;
+            document.getElementById('hyper-loss').textContent = finalLoss.toFixed(2);
+            drawHyperparamCanvas();
+        }
+
+        function resetHyperparamDemo() {
+            hyperparamState.history = [];
+            document.getElementById('hyper-loss').textContent = '0.00';
+            document.getElementById('hyper-iters').textContent = '0';
+            document.getElementById('hyper-status').textContent = '-';
+            drawHyperparamCanvas();
+        }
+
+        function drawHyperparamCanvas() {
+            const canvas = document.getElementById('hyperparamCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            // Grid
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * h / 10);
+                ctx.lineTo(w, i * h / 10);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(i * w / 10, 0);
+                ctx.lineTo(i * w / 10, h);
+                ctx.stroke();
+            }
+
+            if (hyperparamState.history.length > 0) {
+                const maxIter = hyperparamState.history.length;
+                const maxLoss = Math.max(...hyperparamState.history.map(p => p.loss), 10);
+
+                ctx.strokeStyle = '#00d9ff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                hyperparamState.history.forEach((point, i) => {
+                    const x = (i / maxIter) * w;
+                    const y = h - (point.loss / maxLoss) * h;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+            }
+
+            // Labels
+            ctx.fillStyle = '#fff';
+            ctx.font = '16px sans-serif';
+            ctx.fillText('Loss vs Iterations', 20, 30);
+        }
+
+        // ===== SECTION 7: FORWARD/BACKWARD PASS =====
+        function initForwardBackward() {
+            drawForwardBackward();
+        }
+
+        function stepForward() {
+            if (passState.phase === 'forward' && passState.layer < 3) {
+                passState.layer++;
+            } else if (passState.layer === 3) {
+                passState.phase = 'backward';
+            }
+            drawForwardBackward();
+        }
+
+        function stepBackward() {
+            if (passState.phase === 'backward' && passState.layer > 0) {
+                passState.layer--;
+            } else if (passState.layer === 0) {
+                passState.phase = 'forward';
+            }
+            drawForwardBackward();
+        }
+
+        function autoPlayPasses() {
+            if (passState.isPlaying) return;
+            passState.isPlaying = true;
+            passState.phase = 'forward';
+            passState.layer = 0;
+
+            const interval = setInterval(() => {
+                if (passState.phase === 'forward' && passState.layer < 3) {
+                    passState.layer++;
+                } else if (passState.phase === 'forward' && passState.layer === 3) {
+                    passState.phase = 'backward';
+                } else if (passState.phase === 'backward' && passState.layer > 0) {
+                    passState.layer--;
+                } else {
+                    passState.isPlaying = false;
+                    clearInterval(interval);
+                }
+                drawForwardBackward();
+            }, 800);
+        }
+
+        function resetPasses() {
+            passState = {phase: 'forward', layer: 0, isPlaying: false};
+            drawForwardBackward();
+        }
+
+        function drawForwardBackward() {
+            const canvas = document.getElementById('forwardBackwardCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            const layers = [
+                {x: 100, label: 'Input'},
+                {x: 300, label: 'Hidden 1'},
+                {x: 500, label: 'Hidden 2'},
+                {x: 700, label: 'Output'}
+            ];
+
+            // Draw layers
+            layers.forEach((layer, i) => {
+                const isActive = (passState.phase === 'forward' && i <= passState.layer) ||
+                                (passState.phase === 'backward' && i >= passState.layer);
+
+                ctx.fillStyle = isActive ? 'rgba(0, 217, 255, 0.4)' : 'rgba(0, 217, 255, 0.1)';
+                ctx.strokeStyle = '#00d9ff';
+                ctx.lineWidth = 2;
+                ctx.fillRect(layer.x - 30, h/2 - 80, 60, 160);
+                ctx.strokeRect(layer.x - 30, h/2 - 80, 60, 160);
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(layer.label, layer.x, h/2 + 100);
+
+                // Draw neurons
+                for (let j = 0; j < 3; j++) {
+                    ctx.fillStyle = isActive ? '#00d9ff' : '#666';
+                    ctx.beginPath();
+                    ctx.arc(layer.x, h/2 - 40 + j * 40, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            // Draw connections
+            for (let i = 0; i < layers.length - 1; i++) {
+                const isActive = (passState.phase === 'forward' && i < passState.layer) ||
+                                (passState.phase === 'backward' && i >= passState.layer);
+                ctx.strokeStyle = isActive ? 'rgba(0, 217, 255, 0.6)' : 'rgba(0, 217, 255, 0.2)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(layers[i].x + 30, h/2);
+                ctx.lineTo(layers[i+1].x - 30, h/2);
+                ctx.stroke();
+            }
+
+            // Update stats
+            document.getElementById('pass-phase').textContent = passState.phase;
+            document.getElementById('pass-layer').textContent = passState.layer;
+            document.getElementById('pass-pred').textContent = (passState.layer * 0.25).toFixed(2);
+            document.getElementById('pass-loss').textContent = (Math.random() * 2).toFixed(2);
+        }
+
+        // ===== SECTION 8: ATTENTION =====
+        function initAttention() {
+            const slider = document.getElementById('num-heads');
+            slider.addEventListener('input', function() {
+                attentionState.numHeads = parseInt(this.value);
+                document.getElementById('num-heads-value').textContent = this.value;
+                drawAttention();
+            });
+            drawAttention();
+        }
+
+        function selectWord(index) {
+            attentionState.selectedWord = index;
+            drawAttention();
+        }
+
+        function drawAttention() {
+            const canvas = document.getElementById('attentionCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            const words = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+            const wordWidth = w / words.length;
+            const numHeads = attentionState.numHeads;
+            const headHeight = h / numHeads;
+
+            // Draw attention heads
+            for (let head = 0; head < numHeads; head++) {
+                const y = head * headHeight + headHeight / 2;
+
+                // Draw attention weights for this head
+                words.forEach((word, i) => {
+                    const x = i * wordWidth + wordWidth / 2;
+
+                    // Calculate attention weight (simplified)
+                    const weight = 1 / (1 + Math.abs(i - attentionState.selectedWord) + Math.random() * 0.5);
+                    const intensity = weight;
+
+                    // Draw connection from selected word
+                    const fromX = attentionState.selectedWord * wordWidth + wordWidth / 2;
+                    ctx.strokeStyle = `rgba(0, 217, 255, ${intensity})`;
+                    ctx.lineWidth = intensity * 5;
+                    ctx.beginPath();
+                    ctx.moveTo(fromX, y);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+
+                    // Draw word boxes
+                    if (head === 0) {
+                        ctx.fillStyle = i === attentionState.selectedWord ?
+                            'rgba(0, 217, 255, 0.4)' : 'rgba(179, 102, 255, 0.2)';
+                        ctx.fillRect(x - 40, 10, 80, 40);
+                        ctx.strokeStyle = i === attentionState.selectedWord ? '#00d9ff' : '#b366ff';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x - 40, 10, 80, 40);
+
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '16px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(word, x, 35);
+                    }
+                });
+
+                // Head label
+                ctx.fillStyle = '#666';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Head ${head + 1}`, 10, y);
+            }
+        }
+
+        // ===== SECTION 9: DEEP LAYERS =====
+        function initDeepLayers() {
+            const slider = document.getElementById('num-layers');
+            slider.addEventListener('input', function() {
+                deepLayerState.numLayers = parseInt(this.value);
+                document.getElementById('num-layers-value').textContent = this.value;
+                drawDeepLayers();
+            });
+            drawDeepLayers();
+        }
+
+        function visualizeGradientFlow() {
+            drawDeepLayers();
+        }
+
+        function toggleResidual() {
+            deepLayerState.residual = !deepLayerState.residual;
+            document.getElementById('residual-status').textContent = deepLayerState.residual ? 'On' : 'Off';
+            drawDeepLayers();
+        }
+
+        function drawDeepLayers() {
+            const canvas = document.getElementById('deepLayersCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            const numLayers = deepLayerState.numLayers;
+            const layerWidth = Math.min(60, (w - 100) / numLayers);
+            const startX = 50;
+
+            // Draw layers
+            for (let i = 0; i < numLayers; i++) {
+                const x = startX + i * (w - 100) / numLayers;
+                const gradientMagnitude = deepLayerState.residual ?
+                    0.8 : Math.pow(0.7, numLayers - i - 1);
+
+                // Gradient visualization
+                const intensity = gradientMagnitude;
+                const r = Math.floor(255 * (1 - intensity));
+                const g = Math.floor(217 * intensity);
+                const b = 255;
+
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.3)`;
+                ctx.fillRect(x, h/2 - 100, layerWidth, 200);
+                ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, h/2 - 100, layerWidth, 200);
+
+                // Layer label
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`L${i+1}`, x + layerWidth/2, h/2 + 120);
+
+                // Gradient magnitude
+                ctx.fillText(gradientMagnitude.toFixed(2), x + layerWidth/2, h/2 + 140);
+
+                // Residual connections
+                if (deepLayerState.residual && i > 0 && i % 2 === 0) {
+                    ctx.strokeStyle = '#ff66d9';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(x - (w - 100) / numLayers, h/2 - 100);
+                    ctx.lineTo(x + layerWidth, h/2 - 100);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Connections to next layer
+                if (i < numLayers - 1) {
+                    ctx.strokeStyle = 'rgba(0, 217, 255, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x + layerWidth, h/2);
+                    ctx.lineTo(x + layerWidth + (w - 100) / numLayers, h/2);
+                    ctx.stroke();
+                }
+            }
+
+            // Update gradient stats
+            const layer1Grad = deepLayerState.residual ? 0.8 : 1.0;
+            const layer5Grad = deepLayerState.residual ? 0.8 : (numLayers >= 5 ? Math.pow(0.7, numLayers - 5) : 1.0);
+            const layer10Grad = deepLayerState.residual ? 0.8 : (numLayers >= 10 ? Math.pow(0.7, numLayers - 10) : 1.0);
+
+            document.getElementById('layer1-grad').textContent = layer1Grad.toFixed(2);
+            document.getElementById('layer5-grad').textContent = layer5Grad.toFixed(2);
+            document.getElementById('layer10-grad').textContent = layer10Grad.toFixed(2);
+        }
+
+        // ===== SECTION 10: MULTI-TASK =====
+        function initMultiTask() {
+            drawMultiTask();
+        }
+
+        function updateTasks() {
+            drawMultiTask();
+        }
+
+        function trainMultiTask() {
+            alert('Training multi-task model with shared backbone!');
+        }
+
+        function compareWithSingleTask() {
+            alert('Multi-task models can be 2-3x more efficient by sharing learned features!');
+        }
+
+        function drawMultiTask() {
+            const canvas = document.getElementById('multiTaskCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            // Shared backbone
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.2)';
+            ctx.fillRect(50, h/2 - 100, 300, 200);
+            ctx.strokeStyle = '#00d9ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(50, h/2 - 100, 300, 200);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Shared Backbone', 200, h/2);
+            ctx.font = '12px sans-serif';
+            ctx.fillText('(Feature Extraction)', 200, h/2 + 20);
+
+            // Task heads
+            const tasks = [
+                {y: h/2 - 120, label: 'Task 1: Classification', active: document.getElementById('task1').checked},
+                {y: h/2, label: 'Task 2: Segmentation', active: document.getElementById('task2').checked},
+                {y: h/2 + 120, label: 'Task 3: Depth', active: document.getElementById('task3').checked}
+            ];
+
+            tasks.forEach((task, i) => {
+                if (!task.active) return;
+
+                // Connection from backbone
+                ctx.strokeStyle = 'rgba(179, 102, 255, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(350, h/2);
+                ctx.lineTo(500, task.y);
+                ctx.stroke();
+
+                // Task head
+                ctx.fillStyle = 'rgba(179, 102, 255, 0.2)';
+                ctx.fillRect(500, task.y - 40, 250, 80);
+                ctx.strokeStyle = '#b366ff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(500, task.y - 40, 250, 80);
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(task.label, 625, task.y);
+            });
+        }
+
+        // ===== SECTION 11: LOGISTIC VS LINEAR =====
+        function initLogisticLinear() {
+            showLinearExample();
+        }
+
+        function showLinearExample() {
+            currentProblemType = 'linear';
+            document.getElementById('problem-type').textContent = 'Linear Regression';
+            document.getElementById('loss-function').textContent = 'MSE';
+            document.getElementById('output-range').textContent = '(-∞, +∞)';
+            document.getElementById('activation').textContent = 'None';
+            drawLogisticLinear();
+        }
+
+        function showLogisticExample() {
+            currentProblemType = 'logistic';
+            document.getElementById('problem-type').textContent = 'Logistic Classification';
+            document.getElementById('loss-function').textContent = 'Cross-Entropy';
+            document.getElementById('output-range').textContent = '[0, 1]';
+            document.getElementById('activation').textContent = 'Sigmoid';
+            drawLogisticLinear();
+        }
+
+        function drawLogisticLinear() {
+            const canvas = document.getElementById('logisticLinearCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, w, h);
+
+            const originX = w / 2, originY = h / 2;
+            const scale = 80;
+
+            // Grid
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * h / 10);
+                ctx.lineTo(w, i * h / 10);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(i * w / 10, 0);
+                ctx.lineTo(i * w / 10, h);
+                ctx.stroke();
+            }
+
+            // Axes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, originY);
+            ctx.lineTo(w, originY);
+            ctx.moveTo(originX, 0);
+            ctx.lineTo(originX, h);
+            ctx.stroke();
+
+            if (currentProblemType === 'linear') {
+                // Linear regression - straight line
+                ctx.strokeStyle = '#00d9ff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, originY + 2 * scale);
+                ctx.lineTo(w, originY - 2 * scale);
+                ctx.stroke();
+
+                // Scatter points
+                for (let i = 0; i < 20; i++) {
+                    const x = (Math.random() - 0.5) * 3;
+                    const y = 0.8 * x + (Math.random() - 0.5) * 0.5;
+                    const px = originX + x * scale;
+                    const py = originY - y * scale;
+
+                    ctx.fillStyle = '#ff66d9';
+                    ctx.beginPath();
+                    ctx.arc(px, py, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('Linear Regression: y = mx + b', 20, 30);
+                ctx.fillText('Predicts continuous values', 20, 55);
+            } else {
+                // Logistic classification - sigmoid curve
+                ctx.strokeStyle = '#00d9ff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (let px = 0; px < w; px++) {
+                    const x = (px - originX) / scale;
+                    const y = 1 / (1 + Math.exp(-x * 2));
+                    const py = originY - (y - 0.5) * 2 * scale;
+                    if (px === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+
+                // Binary classification points
+                for (let i = 0; i < 20; i++) {
+                    const x = (Math.random() - 0.5) * 3;
+                    const prob = 1 / (1 + Math.exp(-x * 2));
+                    const label = Math.random() < prob ? 1 : 0;
+                    const y = label + (Math.random() - 0.5) * 0.2;
+                    const px = originX + x * scale;
+                    const py = originY - (y - 0.5) * 2 * scale;
+
+                    ctx.fillStyle = label ? '#00d9ff' : '#ff66d9';
+                    ctx.beginPath();
+                    ctx.arc(px, py, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Threshold lines
+                ctx.strokeStyle = 'rgba(179, 102, 255, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(0, originY - scale);
+                ctx.lineTo(w, originY - scale);
+                ctx.moveTo(0, originY + scale);
+                ctx.lineTo(w, originY + scale);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('Logistic Classification: σ(x) = 1/(1+e^-x)', 20, 30);
+                ctx.fillText('Predicts probabilities [0,1]', 20, 55);
+            }
+        }
+
+        // ===== INITIALIZATION =====
+        window.addEventListener('load', function() {
+            initCurveFitting();
+            initGradientDescent();
+            initDerivatives();
+            initChainRule();
+            drawCompGraph();
+            initHyperparameters();
+            initForwardBackward();
+            initAttention();
+            initDeepLayers();
+            initMultiTask();
+            initLogisticLinear();
+        });
+    </script>
+</body>
+</html>
