@@ -1,0 +1,2926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Neural Networks for Financial Pattern Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-primary: #00d9ff;
+            --color-secondary: #b366ff;
+            --color-accent: #ff66d9;
+            --color-dark: #0a0e27;
+            --color-dark-medium: #1a1f3a;
+            --color-text-primary: #e0e0e0;
+            --color-text-secondary: #c0c0c0;
+            --color-text-white: #ffffff;
+            --shadow-light: 0 2px 8px rgba(0, 217, 255, 0.1);
+            --shadow-medium: 0 4px 16px rgba(0, 217, 255, 0.15);
+            --shadow-heavy: 0 8px 32px rgba(0, 217, 255, 0.2);
+            --transition-smooth: all 0.3s ease;
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--color-dark) 0%, var(--color-dark-medium) 100%);
+            color: var(--color-text-primary);
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+        }
+
+        /* Header */
+        .global-header {
+            position: sticky;
+            top: 0;
+            height: 80px;
+            background: rgba(26, 31, 58, 0.95);
+            border-bottom: 2px solid var(--color-primary);
+            box-shadow: var(--shadow-light);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: "🧠";
+            font-size: 1.8rem;
+        }
+
+        .progress-section {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .progress-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: rgba(0, 217, 255, 0.2);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            border-radius: var(--border-radius-sm);
+            transition: width 0.3s ease;
+            width: 9%;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .learning-card {
+            background: rgba(26, 31, 58, 0.8);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: var(--border-radius-lg);
+            width: 100%;
+            max-width: 1000px;
+            height: min(80vh, 700px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 14, 39, 0.5);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .breadcrumb-item:hover {
+            color: var(--color-primary);
+        }
+
+        .breadcrumb-item.current {
+            color: var(--color-text-primary);
+            font-weight: 500;
+        }
+
+        .breadcrumb-separator {
+            color: var(--color-primary);
+        }
+
+        .card-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-primary);
+            background: transparent;
+            color: var(--color-primary);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            min-width: 100px;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: var(--color-primary);
+            color: var(--color-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-button.primary {
+            background: var(--color-primary);
+            color: var(--color-dark);
+        }
+
+        .nav-button.primary:hover {
+            background: var(--color-secondary);
+            border-color: var(--color-secondary);
+        }
+
+        .card-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-stage {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .content-stage::-webkit-scrollbar {
+            display: none;
+        }
+
+        .concept-intro {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .concept-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .concept-description {
+            font-size: 1.2rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 2rem;
+            max-width: 60ch;
+            line-height: 1.6;
+        }
+
+        .interactive-demo {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: var(--border-radius-md);
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+        }
+
+        .demo-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--border-radius-md);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            padding: 1rem 2rem;
+            border-top: 1px solid rgba(0, 217, 255, 0.3);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        .knob {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .knob:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .knob::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 20px;
+            background: var(--color-text-white);
+            border-radius: 2px;
+        }
+
+        .knob-value {
+            font-size: 0.8rem;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(0, 217, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+            border: none;
+        }
+
+        .slider-value {
+            font-size: 0.9rem;
+            color: var(--color-primary);
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .architecture-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .arch-tab {
+            padding: 0.5rem 1rem;
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        .arch-tab:hover {
+            background: rgba(0, 217, 255, 0.2);
+        }
+
+        .arch-tab.active {
+            background: var(--color-primary);
+            color: var(--color-dark);
+            border-color: var(--color-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+
+        .info-box {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: var(--border-radius-sm);
+            border-left: 4px solid;
+        }
+
+        .info-box.insight {
+            background: rgba(0, 217, 255, 0.1);
+            border-color: var(--color-primary);
+        }
+
+        .info-box.try-this {
+            background: rgba(179, 102, 255, 0.1);
+            border-color: var(--color-secondary);
+        }
+
+        .info-box.intuition {
+            background: rgba(255, 102, 217, 0.1);
+            border-color: var(--color-accent);
+        }
+
+        /* Floating Navigation */
+        .floating-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .floating-nav.prev-card {
+            left: 20px;
+        }
+
+        .floating-nav.next-card {
+            right: 20px;
+        }
+
+        .nav-card {
+            background: rgba(26, 31, 58, 0.9);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-medium);
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            opacity: 0.8;
+            pointer-events: all;
+            min-width: 180px;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-card:hover {
+            transform: scale(1.05);
+            opacity: 1;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .nav-card.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-card-content {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            gap: 0.75rem;
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+            color: var(--color-primary);
+        }
+
+        .nav-info {
+            flex: 1;
+        }
+
+        .nav-title {
+            font-size: 0.7rem;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .card-transition-enter {
+            animation: slideInRight 0.5s ease;
+        }
+
+        .card-transition-exit {
+            animation: slideInLeft 0.5s ease;
+        }
+
+        /* Math Display */
+        .math {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.5rem;
+            border-radius: var(--border-radius-sm);
+            display: inline-block;
+            color: var(--color-primary);
+            margin: 0.5rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .global-header {
+                padding: 0 1rem;
+                height: 60px;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .progress-section {
+                gap: 0.5rem;
+            }
+
+            .progress-bar {
+                width: 120px;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .learning-card {
+                height: calc(100vh - 60px - 2rem);
+            }
+
+            .card-header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .breadcrumb {
+                display: none;
+            }
+
+            .card-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .concept-title {
+                font-size: 1.8rem;
+            }
+
+            .concept-description {
+                font-size: 1rem;
+            }
+
+            .control-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+
+            .floating-nav {
+                display: none;
+            }
+        }
+
+        /* Loading and Success States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--color-text-secondary);
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--color-primary);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-checkmark {
+            color: #10b981;
+            font-size: 1.2rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="global-header">
+            <div class="logo">GNN Financial Learning</div>
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="progress-text" id="progressText">1 of 11</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="learning-card" id="learningCard">
+                <!-- Card Header -->
+                <div class="card-header">
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span class="breadcrumb-item">GNN Fundamentals</span>
+                        <span class="breadcrumb-separator">›</span>
+                        <span class="breadcrumb-item current" id="currentSection">Graph Theory Basics</span>
+                    </div>
+                    <div class="card-controls">
+                        <button class="nav-button" id="prevButton" disabled>← Previous</button>
+                        <button class="nav-button primary" id="nextButton">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Card Content -->
+                <div class="card-content">
+                    <div class="content-stage" id="contentStage">
+                        <div class="concept-intro">
+                            <h1 class="concept-title" id="conceptTitle">Graph Theory Basics</h1>
+                            <p class="concept-description" id="conceptDescription">
+                                Learn the fundamental concepts of graph theory and how they apply to financial markets.
+                                Understanding graphs is the foundation for mastering Graph Neural Networks.
+                            </p>
+                            
+                            <!-- Interactive Demo Area -->
+                            <div class="interactive-demo" id="interactiveDemo">
+                                <canvas class="demo-canvas" id="demoCanvas"></canvas>
+                                
+                                <!-- Control Panel -->
+                                <div class="control-panel" id="controlPanel">
+                                    <div class="control-grid" id="controlGrid">
+                                        <!-- Dynamic controls will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Navigation -->
+        <aside class="floating-nav prev-card" id="floatingPrev">
+            <div class="nav-card disabled">
+                <div class="nav-card-content">
+                    <div class="nav-icon">←</div>
+                    <div class="nav-info">
+                        <div class="nav-title">Previous Topic</div>
+                        <div class="nav-name">Introduction</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <aside class="floating-nav next-card" id="floatingNext">
+            <div class="nav-card">
+                <div class="nav-card-content">
+                    <div class="nav-info">
+                        <div class="nav-title">Next Topic</div>
+                        <div class="nav-name" id="nextTopicName">GNN Introduction</div>
+                    </div>
+                    <div class="nav-icon">→</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // ===== GLOBAL STATE =====
+        let currentSectionIndex = 0;
+        let isTransitioning = false;
+        
+        // GNN Parameters State
+        let gnnParameters = {
+            architecture: 'GCN',
+            hiddenDimensions: 64,
+            layerDepth: 3,
+            dropoutRate: 0.3,
+            learningRate: 0.01,
+            batchSize: 64,
+            aggregation: 'mean',
+            // Advanced feature parameters
+            explanationMethod: 'attention',
+            taskCombination: 'expansion+retracement',
+            metricsType: 'f1-precision-recall',
+            visualizationMode: 'real-time',
+            exportFormat: 'json',
+            exportOptions: {},
+            modelType: 'pretrained'
+        };
+
+        // Section Data
+        const sections = [
+            {
+                id: 'graph-theory',
+                title: 'Graph Theory Basics',
+                description: 'Learn the fundamental concepts of graph theory and how they apply to financial markets. Understanding graphs is the foundation for mastering Graph Neural Networks.',
+                controls: ['architecture', 'hiddenDimensions'],
+                demo: 'graphConstruction'
+            },
+            {
+                id: 'gnn-intro',
+                title: 'Graph Neural Networks Introduction',
+                description: 'Understand the message passing framework and how GNNs update node embeddings through neighborhood aggregation.',
+                controls: ['architecture', 'hiddenDimensions', 'layerDepth'],
+                demo: 'messagePassing'
+            },
+            {
+                id: 'gcn',
+                title: 'Graph Convolutional Networks (GCN)',
+                description: 'Explore spectral graph theory and how GCNs perform convolutions on graphs using the graph Laplacian.',
+                controls: ['architecture', 'hiddenDimensions', 'layerDepth', 'aggregation'],
+                demo: 'gcnDemo'
+            },
+            {
+                id: 'graphsage',
+                title: 'GraphSAGE',
+                description: 'Learn about inductive learning on graphs and how GraphSAGE handles unseen nodes through sampling and aggregation.',
+                controls: ['architecture', 'hiddenDimensions', 'aggregation'],
+                demo: 'graphsageDemo'
+            },
+            {
+                id: 'gat',
+                title: 'Graph Attention Networks (GAT)',
+                description: 'Discover attention mechanisms on graphs and how GATs learn to focus on the most important neighbors.',
+                controls: ['architecture', 'hiddenDimensions', 'layerDepth'],
+                demo: 'gatDemo'
+            },
+            {
+                id: 'financial-graphs',
+                title: 'Financial Time Series Graphs',
+                description: 'Build temporal graphs from financial data and learn how GNNs model time-evolving market relationships.',
+                controls: ['architecture', 'layerDepth', 'dropoutRate'],
+                demo: 'financialGraphs'
+            },
+            {
+                id: 'pattern-detection',
+                title: 'Pattern Detection with GNNs',
+                description: 'Detect financial patterns like expansion, consolidation, retracement, and reversal using Graph Neural Networks.',
+                controls: ['architecture', 'hiddenDimensions', 'learningRate'],
+                demo: 'patternDetection'
+            },
+            {
+                id: 'parameter-efficiency',
+                title: 'Parameter Efficiency vs CNNs',
+                description: 'Compare GNN parameter efficiency with traditional CNNs and understand the advantages for financial applications.',
+                controls: ['architecture', 'hiddenDimensions', 'batchSize'],
+                demo: 'parameterEfficiency'
+            },
+            {
+                id: 'graphcl',
+                title: 'Self-Supervised Learning (GraphCL)',
+                description: 'Learn how GraphCL uses contrastive learning to pre-train GNNs on unlabeled financial graph data with graph augmentation.',
+                controls: ['architecture', 'learningRate', 'batchSize'],
+                demo: 'graphclDemo'
+            },
+            {
+                id: 'explainability',
+                title: 'GNN Explainability Framework',
+                description: 'Understand how to interpret GNN decisions using attention heatmaps, SubgraphX, SHAP values, and PGExplainer.',
+                controls: ['architecture', 'hiddenDimensions', 'explanationMethod'],
+                demo: 'explainabilityDemo'
+            },
+            {
+                id: 'multi-task',
+                title: 'Multi-Task Learning for Patterns',
+                description: 'Learn to detect multiple financial pattern combinations using shared encoders and task-specific heads.',
+                controls: ['architecture', 'hiddenDimensions', 'taskCombination'],
+                demo: 'multiTaskDemo'
+            },
+            {
+                id: 'evaluation',
+                title: 'Evaluation Metrics Dashboard',
+                description: 'Monitor model performance with real-time F1 scores, precision, recall, confusion matrices, and learning curves.',
+                controls: ['architecture', 'metricsType', 'visualizationMode'],
+                demo: 'evaluationDemo'
+            },
+            {
+                id: 'export',
+                title: 'Export & Model Management',
+                description: 'Export learned configurations, model parameters, learning analytics, and visualization results.',
+                controls: ['exportFormat', 'exportOptions', 'modelType'],
+                demo: 'exportDemo'
+            },
+            {
+                id: 'ensemble',
+                title: 'Ensemble Methods & Stacking',
+                description: 'Combine multiple GNN models for robust financial predictions using ensemble techniques.',
+                controls: ['architecture', 'layerDepth', 'learningRate'],
+                demo: 'ensembleDemo'
+            },
+            {
+                id: 'advanced',
+                title: 'Advanced Applications',
+                description: 'Explore cutting-edge applications including multi-modal fusion, hierarchical GNNs, and quantum finance.',
+                controls: ['architecture', 'hiddenDimensions', 'layerDepth', 'dropoutRate'],
+                demo: 'advancedDemo'
+            }
+        ];
+
+        // ===== NAVIGATION FUNCTIONS =====
+        function updateSection() {
+            if (isTransitioning) return;
+            
+            const section = sections[currentSectionIndex];
+            
+            // Update UI
+            document.getElementById('conceptTitle').textContent = section.title;
+            document.getElementById('conceptDescription').textContent = section.description;
+            document.getElementById('currentSection').textContent = section.title;
+            document.getElementById('progressText').textContent = `${currentSectionIndex + 1} of ${sections.length}`;
+            
+            // Update progress bar
+            const progressPercent = ((currentSectionIndex + 1) / sections.length) * 100;
+            document.getElementById('progressFill').style.width = `${progressPercent}%`;
+            
+            // Update navigation buttons
+            document.getElementById('prevButton').disabled = currentSectionIndex === 0;
+            document.getElementById('nextButton').disabled = currentSectionIndex === sections.length - 1;
+            
+            // Update floating navigation
+            updateFloatingNav();
+            
+            // Update controls
+            updateControls(section.controls);
+            
+            // Load demo
+            loadDemo(section.demo);
+            
+            // Add transition animation
+            const card = document.getElementById('learningCard');
+            card.classList.add('card-transition-enter');
+            setTimeout(() => {
+                card.classList.remove('card-transition-enter');
+            }, 500);
+        }
+
+        function updateFloatingNav() {
+            const prevCard = document.querySelector('#floatingPrev .nav-card');
+            const nextCard = document.querySelector('#floatingNext .nav-card');
+            const nextTopicName = document.getElementById('nextTopicName');
+            
+            // Update previous card
+            if (currentSectionIndex === 0) {
+                prevCard.classList.add('disabled');
+            } else {
+                prevCard.classList.remove('disabled');
+                prevCard.querySelector('.nav-name').textContent = sections[currentSectionIndex - 1].title;
+            }
+            
+            // Update next card
+            if (currentSectionIndex === sections.length - 1) {
+                nextCard.classList.add('disabled');
+                nextTopicName.textContent = 'Complete!';
+            } else {
+                nextCard.classList.remove('disabled');
+                nextTopicName.textContent = sections[currentSectionIndex + 1].title;
+            }
+        }
+
+        function navigateToSection(direction) {
+            if (isTransitioning) return;
+            
+            isTransitioning = true;
+            const newIndex = currentSectionIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < sections.length) {
+                currentSectionIndex = newIndex;
+                setTimeout(() => {
+                    updateSection();
+                    isTransitioning = false;
+                }, 250);
+            } else {
+                isTransitioning = false;
+            }
+        }
+
+        // ===== CONTROL FUNCTIONS =====
+        function updateControls(controlTypes) {
+            const controlGrid = document.getElementById('controlGrid');
+            controlGrid.innerHTML = '';
+            
+            controlTypes.forEach(controlType => {
+                switch (controlType) {
+                    case 'architecture':
+                        controlGrid.appendChild(createArchitectureControl());
+                        break;
+                    case 'hiddenDimensions':
+                        controlGrid.appendChild(createHiddenDimensionsControl());
+                        break;
+                    case 'layerDepth':
+                        controlGrid.appendChild(createLayerDepthControl());
+                        break;
+                    case 'dropoutRate':
+                        controlGrid.appendChild(createDropoutRateControl());
+                        break;
+                    case 'learningRate':
+                        controlGrid.appendChild(createLearningRateControl());
+                        break;
+                    case 'batchSize':
+                        controlGrid.appendChild(createBatchSizeControl());
+                        break;
+                    case 'aggregation':
+                        controlGrid.appendChild(createAggregationControl());
+                        break;
+                    case 'explanationMethod':
+                        controlGrid.appendChild(createExplanationMethodControl());
+                        break;
+                    case 'taskCombination':
+                        controlGrid.appendChild(createTaskCombinationControl());
+                        break;
+                    case 'metricsType':
+                        controlGrid.appendChild(createMetricsTypeControl());
+                        break;
+                    case 'visualizationMode':
+                        controlGrid.appendChild(createVisualizationModeControl());
+                        break;
+                    case 'exportFormat':
+                        controlGrid.appendChild(createExportFormatControl());
+                        break;
+                    case 'exportOptions':
+                        controlGrid.appendChild(createExportOptionsControl());
+                        break;
+                    case 'modelType':
+                        controlGrid.appendChild(createModelTypeControl());
+                        break;
+                }
+            });
+        }
+
+        function createArchitectureControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            container.innerHTML = `
+                <label class="control-label">Architecture</label>
+                <div class="architecture-tabs">
+                    <div class="arch-tab ${gnnParameters.architecture === 'GCN' ? 'active' : ''}" 
+                         onclick="selectArchitecture('GCN')">GCN</div>
+                    <div class="arch-tab ${gnnParameters.architecture === 'GraphSAGE' ? 'active' : ''}" 
+                         onclick="selectArchitecture('GraphSAGE')">GraphSAGE</div>
+                    <div class="arch-tab ${gnnParameters.architecture === 'GAT' ? 'active' : ''}" 
+                         onclick="selectArchitecture('GAT')">GAT</div>
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createHiddenDimensionsControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = [16, 32, 64, 128];
+            const currentValue = gnnParameters.hiddenDimensions;
+            const currentIndex = options.indexOf(currentValue);
+            
+            container.innerHTML = `
+                <label class="control-label">Hidden Dimensions</label>
+                <div class="knob" style="transform: rotate(${(currentIndex / (options.length - 1)) * 270}deg);"></div>
+                <div class="knob-value">${currentValue}</div>
+                <div style="display: flex; justify-content: space-between; width: 80px; margin-top: 0.5rem;">
+                    ${options.map(opt => `<span style="font-size: 0.7rem; color: var(--color-text-secondary);">${opt}</span>`).join('')}
+                </div>
+            `;
+            
+            // Add click handler for cycling through options
+            const knob = container.querySelector('.knob');
+            knob.addEventListener('click', () => {
+                const newIndex = (currentIndex + 1) % options.length;
+                gnnParameters.hiddenDimensions = options[newIndex];
+                updateSection();
+            });
+            
+            return container;
+        }
+
+        function createLayerDepthControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = [2, 3, 4, 5];
+            const currentValue = gnnParameters.layerDepth;
+            
+            container.innerHTML = `
+                <label class="control-label">Layer Depth</label>
+                <div style="display: flex; gap: 0.25rem;">
+                    ${options.map(depth => `
+                        <div class="arch-tab ${depth === currentValue ? 'active' : ''}" 
+                             onclick="selectLayerDepth(${depth})">${depth}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createDropoutRateControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            container.innerHTML = `
+                <label class="control-label">Dropout Rate</label>
+                <input type="range" class="slider" 
+                       min="0.1" max="0.7" step="0.05" 
+                       value="${gnnParameters.dropoutRate}"
+                       onchange="updateDropoutRate(this.value)">
+                <div class="slider-value">${Math.round(gnnParameters.dropoutRate * 100)}%</div>
+            `;
+            
+            return container;
+        }
+
+        function createLearningRateControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = [0.001, 0.003, 0.01, 0.03];
+            const currentIndex = options.indexOf(gnnParameters.learningRate);
+            
+            container.innerHTML = `
+                <label class="control-label">Learning Rate</label>
+                <div class="knob" style="transform: rotate(${(currentIndex / (options.length - 1)) * 270}deg);"></div>
+                <div class="knob-value">${gnnParameters.learningRate}</div>
+                <div style="display: flex; justify-content: space-between; width: 80px; margin-top: 0.5rem; font-size: 0.7rem; color: var(--color-text-secondary);">
+                    ${options.map(opt => opt).join('')}
+                </div>
+            `;
+            
+            const knob = container.querySelector('.knob');
+            knob.addEventListener('click', () => {
+                const newIndex = (currentIndex + 1) % options.length;
+                gnnParameters.learningRate = options[newIndex];
+                updateSection();
+            });
+            
+            return container;
+        }
+
+        function createBatchSizeControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = [32, 64, 128, 256];
+            const currentValue = gnnParameters.batchSize;
+            
+            container.innerHTML = `
+                <label class="control-label">Batch Size</label>
+                <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center;">
+                    ${options.map(size => `
+                        <div class="arch-tab ${size === currentValue ? 'active' : ''}" 
+                             onclick="selectBatchSize(${size})">${size}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createAggregationControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = ['mean', 'max', 'sum'];
+            const currentValue = gnnParameters.aggregation;
+            
+            container.innerHTML = `
+                <label class="control-label">Aggregation</label>
+                <div style="display: flex; gap: 0.25rem;">
+                    ${options.map(agg => `
+                        <div class="arch-tab ${agg === currentValue ? 'active' : ''}" 
+                             onclick="selectAggregation('${agg}')">${agg.toUpperCase()}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createExplanationMethodControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = [
+                { value: 'attention', label: 'Attention', color: '#00d9ff' },
+                { value: 'subgraphx', label: 'SubgraphX', color: '#b366ff' },
+                { value: 'shap', label: 'SHAP', color: '#ff66d9' },
+                { value: 'pgexplainer', label: 'PGExplainer', color: '#00ff88' }
+            ];
+            
+            container.innerHTML = `
+                <label class="control-label">Explanation Method</label>
+                <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                    ${options.map(method => `
+                        <div class="arch-tab" 
+                             onclick="selectExplanationMethod('${method.value}')">
+                            <span style="color: ${method.color};">●</span> ${method.label}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createTaskCombinationControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = ['expansion+retracement', 'consolidation+reversal', 'multi-pattern', 'sequence'];
+            
+            container.innerHTML = `
+                <label class="control-label">Task Combination</label>
+                <div style="display: flex; gap: 0.25rem; flex-direction: column;">
+                    ${options.map(combo => `
+                        <div class="arch-tab" style="text-align: center; font-size: 0.8rem;" 
+                             onclick="selectTaskCombination('${combo}')">${combo.replace('+', ' + ')}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createMetricsTypeControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = [
+                { value: 'f1-precision-recall', label: 'F1/Prec/Recall' },
+                { value: 'loss-curves', label: 'Loss Curves' },
+                { value: 'confusion-matrix', label: 'Confusion Matrix' },
+                { value: 'parameter-efficiency', label: 'Param Efficiency' }
+            ];
+            
+            container.innerHTML = `
+                <label class="control-label">Metrics Type</label>
+                <div style="display: flex; gap: 0.25rem; flex-direction: column;">
+                    ${options.map(metric => `
+                        <div class="arch-tab" style="text-align: center; font-size: 0.8rem;" 
+                             onclick="selectMetricsType('${metric.value}')">${metric.label}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createVisualizationModeControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = ['real-time', 'interactive', 'comparison', 'historical'];
+            
+            container.innerHTML = `
+                <label class="control-label">Visualization Mode</label>
+                <div style="display: flex; gap: 0.25rem;">
+                    ${options.map(mode => `
+                        <div class="arch-tab" style="font-size: 0.8rem;" 
+                             onclick="selectVisualizationMode('${mode}')">${mode.toUpperCase()}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createExportFormatControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = ['JSON', 'CSV', 'PDF', 'PNG'];
+            
+            container.innerHTML = `
+                <label class="control-label">Export Format</label>
+                <div style="display: flex; gap: 0.25rem;">
+                    ${options.map(format => `
+                        <div class="arch-tab" style="font-size: 0.8rem;" 
+                             onclick="selectExportFormat('${format.toLowerCase()}')">${format}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createExportOptionsControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = [
+                { value: 'config', label: 'Config' },
+                { value: 'model', label: 'Model' },
+                { value: 'analytics', label: 'Analytics' },
+                { value: 'visualization', label: 'Visualizations' }
+            ];
+            
+            container.innerHTML = `
+                <label class="control-label">Export Options</label>
+                <div style="display: flex; gap: 0.25rem; flex-direction: column;">
+                    ${options.map(option => `
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                            <input type="checkbox" style="width: 16px; height: 16px;" 
+                                   onchange="toggleExportOption('${option.value}', this.checked)">
+                            ${option.label}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        function createModelTypeControl() {
+            const container = document.createElement('div');
+            container.className = 'control-item';
+            
+            const options = ['pretrained', 'fine-tuned', 'ensemble', 'individual'];
+            
+            container.innerHTML = `
+                <label class="control-label">Model Type</label>
+                <div style="display: flex; gap: 0.25rem;">
+                    ${options.map(type => `
+                        <div class="arch-tab" style="font-size: 0.8rem;" 
+                             onclick="selectModelType('${type}')">${type.toUpperCase()}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            return container;
+        }
+
+        // ===== CONTROL EVENT HANDLERS =====
+        function selectArchitecture(architecture) {
+            gnnParameters.architecture = architecture;
+            updateSection();
+        }
+
+        function selectLayerDepth(depth) {
+            gnnParameters.layerDepth = depth;
+            updateSection();
+        }
+
+        function updateDropoutRate(value) {
+            gnnParameters.dropoutRate = parseFloat(value);
+            document.querySelector('.slider-value').textContent = `${Math.round(value * 100)}%`;
+        }
+
+        function selectBatchSize(size) {
+            gnnParameters.batchSize = size;
+            updateSection();
+        }
+
+        function selectAggregation(aggregation) {
+            gnnParameters.aggregation = aggregation;
+            updateSection();
+        }
+
+        function selectExplanationMethod(method) {
+            gnnParameters.explanationMethod = method;
+            updateSection();
+        }
+
+        function selectTaskCombination(combo) {
+            gnnParameters.taskCombination = combo;
+            updateSection();
+        }
+
+        function selectMetricsType(metrics) {
+            gnnParameters.metricsType = metrics;
+            updateSection();
+        }
+
+        function selectVisualizationMode(mode) {
+            gnnParameters.visualizationMode = mode;
+            updateSection();
+        }
+
+        function selectExportFormat(format) {
+            gnnParameters.exportFormat = format;
+            updateSection();
+        }
+
+        function toggleExportOption(option, checked) {
+            if (!gnnParameters.exportOptions) {
+                gnnParameters.exportOptions = {};
+            }
+            gnnParameters.exportOptions[option] = checked;
+        }
+
+        function selectModelType(modelType) {
+            gnnParameters.modelType = modelType;
+            updateSection();
+        }
+
+        // ===== DEMO FUNCTIONS =====
+        function loadDemo(demoType) {
+            const canvas = document.getElementById('demoCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight - 100; // Account for control panel
+            
+            // Clear canvas
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Load specific demo
+            switch (demoType) {
+                case 'graphConstruction':
+                    drawGraphConstructionDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'messagePassing':
+                    drawMessagePassingDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'gcnDemo':
+                    drawGCNDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'graphsageDemo':
+                    drawGraphSAGEDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'gatDemo':
+                    drawGATDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'financialGraphs':
+                    drawFinancialGraphsDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'patternDetection':
+                    drawPatternDetectionDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'parameterEfficiency':
+                    drawParameterEfficiencyDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'graphclDemo':
+                    drawGraphCLDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'explainabilityDemo':
+                    drawExplainabilityDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'multiTaskDemo':
+                    drawMultiTaskDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'evaluationDemo':
+                    drawEvaluationDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'exportDemo':
+                    drawExportDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'ensembleDemo':
+                    drawEnsembleDemo(ctx, canvas.width, canvas.height);
+                    break;
+                case 'advancedDemo':
+                    drawAdvancedDemo(ctx, canvas.width, canvas.height);
+                    break;
+            }
+        }
+
+        function drawGraphConstructionDemo(ctx, width, height) {
+            // Draw grid
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * height / 10);
+                ctx.lineTo(width, i * height / 10);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(i * width / 10, 0);
+                ctx.lineTo(i * width / 10, height);
+                ctx.stroke();
+            }
+
+            // Create sample financial graph
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const numNodes = 8;
+            const radius = Math.min(width, height) / 3;
+
+            // Draw nodes (stocks)
+            const nodes = [];
+            for (let i = 0; i < numNodes; i++) {
+                const angle = (2 * Math.PI * i) / numNodes;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                nodes.push({x, y, id: i});
+                
+                // Node
+                ctx.fillStyle = '#00d9ff';
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Node label
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Stock ${i + 1}`, x, y + 5);
+            }
+
+            // Draw edges (correlations)
+            ctx.strokeStyle = 'rgba(179, 102, 255, 0.6)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < numNodes; i++) {
+                for (let j = i + 1; j < numNodes; j++) {
+                    // Only draw some edges to show correlation
+                    if (Math.random() > 0.6) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Title
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Financial Correlation Graph', centerX, 30);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '14px Arial';
+            ctx.fillText('Nodes = Stocks, Edges = High Correlation', centerX, 55);
+
+            // Info box
+            drawInfoBox(ctx, width, height, 'Nodes represent individual stocks, edges represent high correlation relationships (>0.7)');
+        }
+
+        function drawMessagePassingDemo(ctx, width, height) {
+            // Draw grid
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * height / 10);
+                ctx.lineTo(width, i * height / 10);
+                ctx.stroke();
+            }
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Draw message passing layers
+            const layers = [
+                {x: centerX - 200, label: 'Input', color: '#00d9ff'},
+                {x: centerX, label: 'Hidden', color: '#b366ff'},
+                {x: centerX + 200, label: 'Output', color: '#ff66d9'}
+            ];
+
+            layers.forEach((layer, layerIndex) => {
+                // Draw layer nodes
+                for (let i = 0; i < 3; i++) {
+                    const y = centerY - 40 + i * 40;
+                    
+                    ctx.fillStyle = layer.color;
+                    ctx.beginPath();
+                    ctx.arc(layer.x, y, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${layerIndex * 32 + (i + 1) * 16}`, layer.x, y + 5);
+                }
+
+                // Layer label
+                ctx.fillStyle = layer.color;
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(layer.label, layer.x, centerY + 80);
+            });
+
+            // Draw connections
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.4)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    ctx.beginPath();
+                    ctx.moveTo(layers[0].x + 20, centerY - 40 + i * 40);
+                    ctx.lineTo(layers[1].x - 20, centerY - 40 + j * 40);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(layers[1].x + 20, centerY - 40 + i * 40);
+                    ctx.lineTo(layers[2].x - 20, centerY - 40 + j * 40);
+                    ctx.stroke();
+                }
+            }
+
+            // Title
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GNN Message Passing', centerX, 30);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '14px Arial';
+            ctx.fillText('Each layer aggregates information from neighbors', centerX, 55);
+
+            // Info box
+            drawInfoBox(ctx, width, height, 'Message passing: Each node sends its features to neighbors, receives their features, and updates its own representation');
+        }
+
+        function drawGCNDemo(ctx, width, height) {
+            // Implementation for GCN demo
+            drawMessagePassingDemo(ctx, width, height);
+            
+            // Add GCN-specific overlays
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.2)';
+            ctx.fillRect(20, height - 120, width - 40, 100);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '14px Arial';
+            ctx.fillText('GCN Formula: H^(l+1) = σ(D~^(-1/2) * A~ * D~^(-1/2) * H^(l) * W^(l))', 30, height - 90);
+            ctx.fillText('Where A~ = A + I (adjacency matrix with self-loops)', 30, height - 70);
+            ctx.fillText('D~ is the degree matrix, W^(l) is the weight matrix', 30, height - 50);
+        }
+
+        function drawGraphSAGEDemo(ctx, width, height) {
+            // Implementation for GraphSAGE demo
+            drawMessagePassingDemo(ctx, width, height);
+            
+            // Add GraphSAGE-specific elements
+            ctx.fillStyle = 'rgba(179, 102, 255, 0.2)';
+            ctx.fillRect(20, height - 120, width - 40, 100);
+            
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '14px Arial';
+            ctx.fillText('GraphSAGE Features:', 30, height - 90);
+            ctx.fillText('• Inductive learning (handles unseen nodes)', 30, height - 70);
+            ctx.fillText('• Neighbor sampling for scalability', 30, height - 50);
+            ctx.fillText('• Mean, Max, or LSTM aggregation', 30, height - 30);
+        }
+
+        function drawGATDemo(ctx, width, height) {
+            // Implementation for GAT demo
+            drawMessagePassingDemo(ctx, width, height);
+            
+            // Add attention weights visualization
+            ctx.fillStyle = 'rgba(255, 102, 217, 0.2)';
+            ctx.fillRect(20, height - 120, width - 40, 100);
+            
+            ctx.fillStyle = '#ff66d9';
+            ctx.font = '14px Arial';
+            ctx.fillText('GAT Attention Mechanism:', 30, height - 90);
+            ctx.fillText('• Multi-head attention for different relationships', 30, height - 70);
+            ctx.fillText('• Learns which neighbors are most important', 30, height - 50);
+            ctx.fillText('• Attention scores: α_ij = softmax(LeakyReLU(a^T[W h_i || W h_j]))', 30, height - 30);
+        }
+
+        function drawFinancialGraphsDemo(ctx, width, height) {
+            // Implementation for financial graphs demo
+            drawGraphConstructionDemo(ctx, width, height);
+            
+            // Add temporal dimension
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(20, 70, width - 40, height - 180);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '14px Arial';
+            ctx.fillText('Temporal Graph Construction', 30, 90);
+            ctx.fillText('• Sliding window approach for time series', 30, 110);
+            ctx.fillText('• Dynamic graphs with time-varying edges', 30, 130);
+            ctx.fillText('• Multi-horizon prediction capabilities', 30, 150);
+        }
+
+        function drawPatternDetectionDemo(ctx, width, height) {
+            // Draw financial patterns
+            const patterns = [
+                {name: 'Expansion', x: 50, y: 100, color: '#00ff88'},
+                {name: 'Consolidation', x: 200, y: 100, color: '#ffaa00'},
+                {name: 'Retracement', x: 350, y: 100, color: '#ff6600'},
+                {name: 'Reversal', x: 500, y: 100, color: '#ff0066'}
+            ];
+
+            patterns.forEach(pattern => {
+                // Pattern visualization
+                ctx.fillStyle = pattern.color;
+                ctx.strokeStyle = pattern.color;
+                ctx.lineWidth = 3;
+                
+                // Simplified pattern shapes
+                ctx.beginPath();
+                switch(pattern.name) {
+                    case 'Expansion':
+                        ctx.moveTo(pattern.x, pattern.y + 50);
+                        ctx.lineTo(pattern.x + 30, pattern.y + 20);
+                        ctx.lineTo(pattern.x + 60, pattern.y + 60);
+                        ctx.lineTo(pattern.x + 90, pattern.y + 10);
+                        break;
+                    case 'Consolidation':
+                        ctx.moveTo(pattern.x, pattern.y + 30);
+                        ctx.lineTo(pattern.x + 30, pattern.y + 35);
+                        ctx.lineTo(pattern.x + 60, pattern.y + 25);
+                        ctx.lineTo(pattern.x + 90, pattern.y + 30);
+                        break;
+                    case 'Retracement':
+                        ctx.moveTo(pattern.x, pattern.y + 20);
+                        ctx.lineTo(pattern.x + 30, pattern.y + 60);
+                        ctx.lineTo(pattern.x + 60, pattern.y + 40);
+                        ctx.lineTo(pattern.x + 90, pattern.y + 50);
+                        break;
+                    case 'Reversal':
+                        ctx.moveTo(pattern.x, pattern.y + 20);
+                        ctx.lineTo(pattern.x + 30, pattern.y + 60);
+                        ctx.lineTo(pattern.x + 60, pattern.y + 50);
+                        ctx.lineTo(pattern.x + 90, pattern.y + 80);
+                        break;
+                }
+                ctx.stroke();
+                
+                // Pattern label
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(pattern.name, pattern.x + 45, pattern.y + 100);
+            });
+
+            // Title
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Financial Pattern Detection', width / 2, 50);
+
+            // Info
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '14px Arial';
+            ctx.fillText('GNNs excel at detecting complex, multi-asset patterns', width / 2, height - 30);
+        }
+
+        function drawParameterEfficiencyDemo(ctx, width, height) {
+            // Draw parameter comparison chart
+            const gcnParams = [64, 32, 16, 128]; // hidden_dim, layers, dropout, batch_size
+            const cnnParams = [256, 512, 256, 128]; // comparable CNN params
+            
+            const barWidth = 60;
+            const spacing = 100;
+            const startX = 150;
+            const startY = height / 2;
+            
+            // GCN bars
+            ctx.fillStyle = '#00d9ff';
+            gcnParams.forEach((param, i) => {
+                const height_bar = param * 0.5;
+                ctx.fillRect(startX + i * spacing, startY - height_bar, barWidth, height_bar);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(param.toString(), startX + i * spacing + barWidth/2, startY - height_bar - 10);
+                ctx.fillStyle = '#00d9ff';
+            });
+            
+            // CNN bars
+            ctx.fillStyle = '#ff66d9';
+            cnnParams.forEach((param, i) => {
+                const height_bar = param * 0.2;
+                ctx.fillRect(startX + i * spacing, startY - height_bar + 100, barWidth, height_bar);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(param.toString(), startX + i * spacing + barWidth/2, startY - height_bar + 90);
+                ctx.fillStyle = '#ff66d9';
+            });
+            
+            // Labels
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GCN', startX - 50, startY + 20);
+            
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillText('CNN', startX - 50, startY + 120);
+            
+            // Parameter labels
+            const paramLabels = ['Hidden', 'Layers', 'Dropout', 'Batch'];
+            paramLabels.forEach((label, i) => {
+                ctx.fillStyle = '#c0c0c0';
+                ctx.font = '12px Arial';
+                ctx.fillText(label, startX + i * spacing + barWidth/2, startY + 150);
+            });
+            
+            // Title
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Parameter Efficiency Comparison', width / 2, 50);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '14px Arial';
+            ctx.fillText('GNNs require fewer parameters while achieving better performance', width / 2, height - 20);
+        }
+
+        function drawSelfSupervisedDemo(ctx, width, height) {
+            // Implementation for self-supervised demo
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(50, 80, width - 100, height - 200);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GraphCL Self-Supervised Learning', width / 2, 50);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '14px Arial';
+            ctx.fillText('Contrastive learning on financial graph data', width / 2, height - 30);
+            
+            // Draw augmentation examples
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Augmentation Strategies:', 70, 120);
+            
+            ctx.font = '14px Arial';
+            ctx.fillText('• Node dropout: Remove random nodes', 70, 150);
+            ctx.fillText('• Edge masking: Remove random edges', 70, 170);
+            ctx.fillText('• Subgraph sampling: Extract subgraphs', 70, 190);
+            ctx.fillText('• Attribute masking: Mask node/edge features', 70, 210);
+            
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillText('Benefits:', 70, 250);
+            ctx.fillText('• Learn representations without labels', 70, 280);
+            ctx.fillText('• Transfer learning across markets', 70, 300);
+            ctx.fillText('• Better generalization', 70, 320);
+        }
+
+        function drawEnsembleDemo(ctx, width, height) {
+            // Implementation for ensemble demo
+            const ensembleModels = [
+                {name: 'GCN', x: 100, y: 150, color: '#00d9ff'},
+                {name: 'GraphSAGE', x: 200, y: 150, color: '#b366ff'},
+                {name: 'GAT', x: 300, y: 150, color: '#ff66d9'},
+                {name: 'Ensemble', x: 200, y: 300, color: '#00ff88'}
+            ];
+            
+            // Draw individual models
+            ensembleModels.forEach(model => {
+                ctx.fillStyle = model.color;
+                ctx.strokeStyle = model.color;
+                ctx.lineWidth = 3;
+                
+                if (model.name === 'Ensemble') {
+                    // Draw larger circle for ensemble
+                    ctx.beginPath();
+                    ctx.arc(model.x, model.y, 40, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(model.x, model.y, 35, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Draw smaller circles for individual models
+                    ctx.beginPath();
+                    ctx.arc(model.x, model.y, 25, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(model.x, model.y, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(model.name, model.x, model.y + 5);
+            });
+            
+            // Draw connections
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(ensembleModels[i].x + 25, ensembleModels[i].y);
+                ctx.lineTo(ensembleModels[3].x - 25, ensembleModels[3].y);
+                ctx.stroke();
+            }
+            
+            // Title
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GNN Ensemble Methods', width / 2, 50);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '14px Arial';
+            ctx.fillText('Combine multiple GNN architectures for robust predictions', width / 2, height - 20);
+        }
+
+        function drawAdvancedDemo(ctx, width, height) {
+            // Implementation for advanced demo
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(50, 80, width - 100, height - 160);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Advanced GNN Applications', width / 2, 50);
+            
+            // Multi-modal integration
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Multi-Modal Integration:', 70, 120);
+            
+            ctx.font = '14px Arial';
+            ctx.fillText('• Price data + News sentiment + Social media', 70, 150);
+            ctx.fillText('• Text, images, and structured data', 70, 170);
+            ctx.fillText('• Cross-modal attention mechanisms', 70, 190);
+            
+            // Hierarchical graphs
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillText('Hierarchical Graph Structures:', 70, 230);
+            ctx.fillText('• Multi-scale market analysis', 70, 260);
+            ctx.fillText('• Sector → Industry → Company hierarchy', 70, 280);
+            ctx.fillText('• Level-wise message passing', 70, 300);
+            
+            // Quantum finance
+            ctx.fillStyle = '#00ff88';
+            ctx.fillText('Quantum Graph Neural Networks:', 70, 340);
+            ctx.fillText('• Quantum superposition for pattern states', 70, 370);
+            ctx.fillText('• Exponential speedup for optimization', 70, 390);
+        }
+
+        // ===== ADVANCED DEMO FUNCTIONS =====
+        
+        function drawGraphCLDemo(ctx, width, height) {
+            // GraphCL Self-Supervised Learning Demo
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(30, 70, width - 60, height - 180);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GraphCL Self-Supervised Learning', width / 2, 50);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '14px Arial';
+            ctx.fillText('Contrastive learning on financial graph data', width / 2, height - 30);
+            
+            // Draw original and augmented graph pair
+            const graph1X = width * 0.25;
+            const graph2X = width * 0.75;
+            const centerY = height * 0.5;
+            
+            // Original graph
+            drawFinancialGraph(ctx, graph1X, centerY, 60, '#00d9ff', 'Original');
+            
+            // Augmentation operations
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Node Dropout', graph1X, centerY - 100);
+            ctx.fillText('Edge Masking', graph1X, centerY + 90);
+            
+            // Augmented graph
+            drawAugmentedGraph(ctx, graph2X, centerY, 60, '#b366ff', 'Augmented');
+            
+            // NT-Xent loss visualization
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillText('Similarity Loss', graph2X, centerY - 100);
+            ctx.fillText('(High for positive pairs)', graph2X, centerY + 90);
+            
+            // Draw connection between graphs
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(graph1X + 70, centerY);
+            ctx.lineTo(graph2X - 70, centerY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 3D embedding space preview
+            ctx.fillStyle = 'rgba(0, 255, 136, 0.1)';
+            ctx.fillRect(width * 0.5 - 80, 80, 160, 60);
+            
+            ctx.fillStyle = '#00ff88';
+            ctx.font = '12px Arial';
+            ctx.fillText('3D Embedding Space', width * 0.5, 120);
+            ctx.fillText('t-SNE/UMAP Projection', width * 0.5, 140);
+        }
+        
+        function drawFinancialGraph(ctx, x, y, size, color, label) {
+            // Draw a simplified financial graph
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            // Nodes
+            const nodes = [
+                {x: x - size * 0.3, y: y - size * 0.3},
+                {x: x + size * 0.3, y: y - size * 0.3},
+                {x: x - size * 0.3, y: y + size * 0.3},
+                {x: x + size * 0.3, y: y + size * 0.3},
+                {x: x, y: y}
+            ];
+            
+            // Draw edges
+            for (let i = 0; i < nodes.length - 1; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    if (Math.random() > 0.4) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Label
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y + size + 20);
+        }
+        
+        function drawAugmentedGraph(ctx, x, y, size, color, label) {
+            // Draw augmented version with some nodes/edges removed
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            const nodes = [
+                {x: x - size * 0.3, y: y - size * 0.3, active: true},
+                {x: x + size * 0.3, y: y - size * 0.3, active: false}, // Dropped
+                {x: x - size * 0.3, y: y + size * 0.3, active: true},
+                {x: x + size * 0.3, y: y + size * 0.3, active: true},
+                {x: x, y: y, active: true}
+            ];
+            
+            // Draw edges (some removed)
+            for (let i = 0; i < nodes.length - 1; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    if (nodes[i].active && nodes[j].active && Math.random() > 0.3) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Draw nodes (faded if dropped)
+            nodes.forEach(node => {
+                ctx.globalAlpha = node.active ? 1.0 : 0.3;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.active ? 8 : 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            });
+            
+            // Label
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y + size + 20);
+        }
+        
+        function drawExplainabilityDemo(ctx, width, height) {
+            // GNN Explainability Framework Demo
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(30, 70, width - 60, height - 150);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GNN Explainability Framework', width / 2, 50);
+            
+            // Draw attention heatmap for GAT
+            const heatmapX = width * 0.2;
+            const heatmapY = height * 0.3;
+            
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Attention Heatmap (GAT)', heatmapX, heatmapY - 20);
+            
+            drawAttentionHeatmap(ctx, heatmapX, heatmapY, 80);
+            
+            // Draw SubgraphX visualization
+            const subgraphX = width * 0.6;
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillText('SubgraphX Important Nodes', subgraphX, heatmapY - 20);
+            
+            drawSubgraphX(ctx, subgraphX, heatmapY, 80);
+            
+            // Draw SHAP force plot
+            ctx.fillStyle = '#00ff88';
+            ctx.font = '14px Arial';
+            ctx.fillText('SHAP Force Plot', width * 0.2, height * 0.7);
+            
+            drawSHAPForcePlot(ctx, width * 0.2, height * 0.7 + 20, 150);
+            
+            // Draw PGExplainer
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillText('PGExplainer', width * 0.6, height * 0.7);
+            
+            drawPGExplainer(ctx, width * 0.6, height * 0.7 + 20, 150);
+            
+            // Method selector
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Current Method: ${gnnParameters.explanationMethod || 'attention'}`, width / 2, height - 20);
+        }
+        
+        function drawAttentionHeatmap(ctx, x, y, size) {
+            const cellSize = size / 4;
+            
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const intensity = Math.random();
+                    const color = `rgba(179, 102, 255, ${0.3 + intensity * 0.7})`;
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x + i * cellSize, y + j * cellSize, cellSize - 1, cellSize - 1);
+                }
+            }
+            
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + i * cellSize);
+                ctx.lineTo(x + size, y + i * cellSize);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(x + i * cellSize, y);
+                ctx.lineTo(x + i * cellSize, y + size);
+                ctx.stroke();
+            }
+        }
+        
+        function drawSubgraphX(ctx, x, y, size) {
+            // Draw nodes with importance scores
+            const nodes = [
+                {x: x - size * 0.2, y: y, importance: 0.9},
+                {x: x, y: y - size * 0.3, importance: 0.7},
+                {x: x, y: y + size * 0.3, importance: 0.6},
+                {x: x + size * 0.2, y: y, importance: 0.8},
+                {x: x, y: y, importance: 0.5}
+            ];
+            
+            nodes.forEach(node => {
+                const alpha = 0.3 + node.importance * 0.7;
+                ctx.fillStyle = `rgba(255, 102, 217, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 10 + node.importance * 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Importance score
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(node.importance.toFixed(1), node.x, node.y + 3);
+            });
+            
+            // Draw connections
+            ctx.strokeStyle = 'rgba(255, 102, 217, 0.5)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    if (Math.random() > 0.5) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        
+        function drawSHAPForcePlot(ctx, x, y, width) {
+            // Simple force plot representation
+            const barHeight = 20;
+            const categories = ['Price', 'Volume', 'Momentum', 'News'];
+            const values = [0.3, -0.2, 0.4, -0.1];
+            
+            categories.forEach((cat, i) => {
+                const value = values[i];
+                const barWidth = Math.abs(value) * width;
+                const barX = x + width / 2 + (value < 0 ? -barWidth : 0);
+                
+                ctx.fillStyle = value > 0 ? '#00ff88' : '#ff6666';
+                ctx.fillRect(barX, y + i * (barHeight + 5), barWidth, barHeight);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(cat, x - 60, y + i * (barHeight + 5) + 15);
+            });
+            
+            // Baseline
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x + width / 2, y - 5);
+            ctx.lineTo(x + width / 2, y + categories.length * (barHeight + 5));
+            ctx.stroke();
+        }
+        
+        function drawPGExplainer(ctx, x, y, size) {
+            // PGExplainer fast explanation visualization
+            ctx.fillStyle = '#ffaa00';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Fast Attribution', x, y - 10);
+            
+            // Draw attribution flow
+            const flow = [
+                {x: x - size * 0.3, y: y, label: 'Input', value: 1.0},
+                {x: x - size * 0.1, y: y, label: 'Layer1', value: 0.8},
+                {x: x + size * 0.1, y: y, label: 'Layer2', value: 0.6},
+                {x: x + size * 0.3, y: y, label: 'Output', value: 0.4}
+            ];
+            
+            flow.forEach((node, i) => {
+                const radius = 15 + node.value * 10;
+                ctx.fillStyle = `rgba(255, 170, 0, ${0.5 + node.value * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.fillText(node.label, node.x, node.y + 25);
+                
+                // Draw arrows
+                if (i < flow.length - 1) {
+                    ctx.strokeStyle = 'rgba(255, 170, 0, 0.7)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(node.x + radius, node.y);
+                    ctx.lineTo(flow[i + 1].x - (15 + flow[i + 1].value * 10), node.y);
+                    ctx.stroke();
+                    
+                    // Arrow head
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.moveTo(flow[i + 1].x - (15 + flow[i + 1].value * 10), node.y);
+                    ctx.lineTo(flow[i + 1].x - (15 + flow[i + 1].value * 10) - 5, node.y - 3);
+                    ctx.lineTo(flow[i + 1].x - (15 + flow[i + 1].value * 10) - 5, node.y + 3);
+                    ctx.fill();
+                }
+            });
+        }
+
+        function drawInfoBox(ctx, width, height, message) {
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(20, height - 80, width - 40, 60);
+            
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(20, height - 80, width - 40, 60);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            
+            // Word wrap the message
+            const words = message.split(' ');
+            const lineHeight = 16;
+            let x = 30;
+            let y = height - 60;
+            
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const textWidth = ctx.measureText(word + ' ').width;
+                
+                if (x + textWidth > width - 40) {
+                    x = 30;
+                    y += lineHeight;
+                }
+                
+                ctx.fillText(word, x, y);
+                x += textWidth;
+            }
+        }
+
+        // ===== EVENT LISTENERS =====
+        document.getElementById('prevButton').addEventListener('click', () => navigateToSection(-1));
+        document.getElementById('nextButton').addEventListener('click', () => navigateToSection(1));
+        document.getElementById('floatingPrev').addEventListener('click', () => navigateToSection(-1));
+        document.getElementById('floatingNext').addEventListener('click', () => navigateToSection(1));
+
+        // ===== INITIALIZATION =====
+        window.addEventListener('load', function() {
+            updateSection();
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') {
+                    navigateToSection(-1);
+                } else if (e.key === 'ArrowRight') {
+                    navigateToSection(1);
+                }
+            });
+        });
+
+        // Handle canvas resize
+        window.addEventListener('resize', function() {
+            const section = sections[currentSectionIndex];
+            if (section) {
+                loadDemo(section.demo);
+            }
+        });
+
+
+        function drawMultiTaskDemo(ctx, width, height) {
+            // Multi-Task Learning Demo
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(30, 70, width - 60, height - 150);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Multi-Task Learning for Financial Patterns', width / 2, 50);
+            
+            // Draw shared encoder
+            const encoderX = width * 0.3;
+            const encoderY = height * 0.5;
+            
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '14px Arial';
+            ctx.fillText('Shared Encoder', encoderX, encoderY - 80);
+            
+            drawSharedEncoder(ctx, encoderX, encoderY, 60);
+            
+            // Draw task-specific heads
+            const tasks = [
+                {name: 'Expansion', x: width * 0.7, y: height * 0.3, color: '#00ff88'},
+                {name: 'Consolidation', x: width * 0.8, y: height * 0.5, color: '#ffaa00'},
+                {name: 'Retracement', x: width * 0.7, y: height * 0.7, color: '#ff6600'},
+                {name: 'Reversal', x: width * 0.6, y: height * 0.5, color: '#ff0066'}
+            ];
+            
+            tasks.forEach(task => {
+                ctx.fillStyle = task.color;
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${task.name} Head`, task.x, task.y - 60);
+                
+                drawTaskHead(ctx, task.x, task.y, 40, task.color);
+                
+                // Draw connection from shared encoder
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(encoderX + 60, encoderY);
+                ctx.lineTo(task.x - 40, task.y);
+                ctx.stroke();
+            });
+            
+            // Multi-task loss visualization
+            ctx.fillStyle = '#ff66d9';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Combined Loss Function', width * 0.5, height * 0.8);
+            
+            drawMultiTaskLoss(ctx, width * 0.3, height * 0.8 + 20, 120);
+            
+            // Pattern relationship matrix
+            drawPatternRelationshipMatrix(ctx, width * 0.7, height * 0.8 + 20, 80);
+            
+            // Current task combination
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Current: ${gnnParameters.taskCombination || 'expansion+retracement'}`, width / 2, height - 20);
+        }
+        
+        function drawSharedEncoder(ctx, x, y, size) {
+            // Draw shared encoder visualization
+            const layers = [
+                {x: x - size * 0.4, y: y, label: 'Input', width: 30},
+                {x: x, y: y, label: 'Shared', width: 50},
+                {x: x + size * 0.4, y: y, label: 'Features', width: 40}
+            ];
+            
+            layers.forEach(layer => {
+                ctx.fillStyle = 'rgba(179, 102, 255, 0.8)';
+                ctx.fillRect(layer.x - layer.width/2, y - 20, layer.width, 40);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(layer.label, layer.x, y + 35);
+            });
+            
+            // Draw layer connections
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < layers.length - 1; i++) {
+                ctx.beginPath();
+                ctx.moveTo(layers[i].x + layers[i].width/2, y);
+                ctx.lineTo(layers[i + 1].x - layers[i + 1].width/2, y);
+                ctx.stroke();
+            }
+        }
+        
+        function drawTaskHead(ctx, x, y, size, color) {
+            // Draw task-specific head
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, size/2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Pattern visualization inside head
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - size * 0.3, y);
+            ctx.lineTo(x, y - size * 0.2);
+            ctx.lineTo(x + size * 0.3, y);
+            ctx.lineTo(x, y + size * 0.2);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        
+        function drawMultiTaskLoss(ctx, x, y, size) {
+            // Draw stacked area chart for multi-task loss
+            const tasks = ['Expansion', 'Consolidation', 'Retracement', 'Reversal'];
+            const colors = ['#00ff88', '#ffaa00', '#ff6600', '#ff0066'];
+            
+            for (let i = 0; i < tasks.length; i++) {
+                const height = (Math.random() * 30 + 10) * (1 - i * 0.1);
+                ctx.fillStyle = colors[i] + '60'; // Semi-transparent
+                ctx.fillRect(x + i * 25, y - height, 20, height);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(tasks[i][0], x + i * 25 + 10, y + 15);
+            }
+        }
+        
+        function drawPatternRelationshipMatrix(ctx, x, y, size) {
+            // Draw pattern similarity matrix
+            const patterns = ['Exp', 'Con', 'Ret', 'Rev'];
+            const similarity = [
+                [1.0, 0.3, 0.8, 0.2],
+                [0.3, 1.0, 0.4, 0.7],
+                [0.8, 0.4, 1.0, 0.1],
+                [0.2, 0.7, 0.1, 1.0]
+            ];
+            
+            const cellSize = size / patterns.length;
+            
+            for (let i = 0; i < patterns.length; i++) {
+                for (let j = 0; j < patterns.length; j++) {
+                    const intensity = similarity[i][j];
+                    ctx.fillStyle = `rgba(0, 217, 255, ${intensity})`;
+                    ctx.fillRect(x + j * cellSize, y + i * cellSize, cellSize - 1, cellSize - 1);
+                }
+            }
+            
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= patterns.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + i * cellSize);
+                ctx.lineTo(x + size, y + i * cellSize);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(x + i * cellSize, y);
+                ctx.lineTo(x + i * cellSize, y + size);
+                ctx.stroke();
+            }
+            
+            // Labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            patterns.forEach((pattern, i) => {
+                ctx.fillText(pattern, x + i * cellSize + cellSize/2, y - 5);
+                ctx.fillText(pattern, x - 15, y + i * cellSize + cellSize/2);
+            });
+        }
+        
+        function drawEvaluationDemo(ctx, width, height) {
+            // Evaluation Metrics Dashboard Demo
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(30, 70, width - 60, height - 150);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Evaluation Metrics Dashboard', width / 2, 50);
+            
+            // Draw F1/Precision/Recall metrics
+            const metrics = [
+                {name: 'F1 Score', value: 0.87, x: width * 0.2, y: height * 0.3},
+                {name: 'Precision', value: 0.92, x: width * 0.5, y: height * 0.3},
+                {name: 'Recall', value: 0.83, x: width * 0.8, y: height * 0.3}
+            ];
+            
+            metrics.forEach(metric => {
+                drawMetricGauge(ctx, metric.x, metric.y, 60, metric.value, metric.name);
+            });
+            
+            // Draw confusion matrix
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Confusion Matrix', width * 0.25, height * 0.6);
+            
+            drawConfusionMatrix(ctx, width * 0.25, height * 0.6 + 20, 80);
+            
+            // Draw training/validation loss curves
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillText('Training/Validation Loss', width * 0.7, height * 0.6);
+            
+            drawLossCurves(ctx, width * 0.7, height * 0.6 + 20, 120);
+            
+            // Draw parameter efficiency comparison
+            ctx.fillStyle = '#00ff88';
+            ctx.fillText('Parameter Efficiency', width * 0.25, height * 0.9);
+            
+            drawParameterEfficiency(ctx, width * 0.25, height * 0.9 + 20, 80);
+            
+            // Draw model comparison
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillText('Model Comparison', width * 0.7, height * 0.9);
+            
+            drawModelComparison(ctx, width * 0.7, height * 0.9 + 20, 120);
+            
+            // Current metrics type
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Viewing: ${gnnParameters.metricsType || 'f1-precision-recall'}`, width / 2, height - 20);
+        }
+        
+        function drawMetricGauge(ctx, x, y, size, value, label) {
+            // Draw circular gauge
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(x, y, size/2, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Draw value arc
+            ctx.strokeStyle = '#00d9ff';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(x, y, size/2, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * value));
+            ctx.stroke();
+            
+            // Value text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText((value * 100).toFixed(0) + '%', x, y + 5);
+            
+            // Label
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '12px Arial';
+            ctx.fillText(label, x, y + size/2 + 20);
+        }
+        
+        function drawConfusionMatrix(ctx, x, y, size) {
+            // Draw confusion matrix
+            const classes = ['Exp', 'Con', 'Ret', 'Rev'];
+            const matrix = [
+                [45, 2, 1, 0],
+                [3, 38, 4, 1],
+                [2, 3, 41, 2],
+                [1, 1, 2, 44]
+            ];
+            
+            const cellSize = size / classes.length;
+            
+            for (let i = 0; i < classes.length; i++) {
+                for (let j = 0; j < classes.length; j++) {
+                    const value = matrix[i][j];
+                    const maxVal = 45;
+                    const intensity = value / maxVal;
+                    
+                    ctx.fillStyle = `rgba(179, 102, 255, ${intensity})`;
+                    ctx.fillRect(x + j * cellSize, y + i * cellSize, cellSize - 1, cellSize - 1);
+                    
+                    // Value text
+                    ctx.fillStyle = value > maxVal * 0.5 ? '#ffffff' : '#000000';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(value, x + j * cellSize + cellSize/2, y + i * cellSize + cellSize/2 + 3);
+                }
+            }
+            
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= classes.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + i * cellSize);
+                ctx.lineTo(x + size, y + i * cellSize);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(x + i * cellSize, y);
+                ctx.lineTo(x + i * cellSize, y + size);
+                ctx.stroke();
+            }
+            
+            // Labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            classes.forEach((cls, i) => {
+                ctx.fillText(cls, x + i * cellSize + cellSize/2, y - 5);
+                ctx.fillText(cls, x - 15, y + i * cellSize + cellSize/2);
+            });
+        }
+        
+        function drawLossCurves(ctx, x, y, size) {
+            // Draw training and validation loss curves
+            const epochs = 50;
+            const trainLoss = [];
+            const valLoss = [];
+            
+            // Generate sample loss curves
+            for (let i = 0; i < epochs; i++) {
+                trainLoss.push(Math.exp(-i/15) + 0.1 + Math.random() * 0.05);
+                valLoss.push(Math.exp(-i/20) + 0.15 + Math.random() * 0.08);
+            }
+            
+            // Draw curves
+            ctx.strokeStyle = '#ff66d9';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < epochs; i += 2) {
+                const px = x + (i / epochs) * size;
+                const py = y + (1 - trainLoss[i] / 2) * size * 0.6;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < epochs; i += 2) {
+                const px = x + (i / epochs) * size;
+                const py = y + (1 - valLoss[i] / 2) * size * 0.6;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            
+            // Legend
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillRect(x, y + size * 0.7, 15, 3);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Training Loss', x + 20, y + size * 0.7 + 5);
+            
+            ctx.fillStyle = '#00ff88';
+            ctx.fillRect(x, y + size * 0.7 + 15, 15, 3);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('Validation Loss', x + 20, y + size * 0.7 + 20);
+        }
+        
+        function drawParameterEfficiency(ctx, x, y, size) {
+            // Draw parameter efficiency bar chart
+            const models = ['GCN', 'GraphSAGE', 'GAT', 'CNN'];
+            const params = [85, 92, 88, 65]; // Efficiency scores
+            const colors = ['#00d9ff', '#b366ff', '#ff66d9', '#ff6666'];
+            
+            const barWidth = size / (models.length * 2);
+            
+            models.forEach((model, i) => {
+                const barHeight = (params[i] / 100) * size * 0.6;
+                
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(x + i * barWidth * 2, y + size * 0.6 - barHeight, barWidth, barHeight);
+                
+                // Value text
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(params[i], x + i * barWidth * 2 + barWidth/2, y + size * 0.6 - barHeight - 5);
+                
+                // Model label
+                ctx.fillText(model, x + i * barWidth * 2 + barWidth/2, y + size * 0.6 + 15);
+            });
+        }
+        
+        function drawModelComparison(ctx, x, y, size) {
+            // Draw radar chart for model comparison
+            const metrics = ['Accuracy', 'F1', 'Speed', 'Memory', 'Interpretability'];
+            const models = {
+                'GCN': [85, 87, 90, 85, 75],
+                'GraphSAGE': [88, 89, 85, 80, 70],
+                'GAT': [92, 91, 75, 70, 90]
+            };
+            
+            const angleStep = (Math.PI * 2) / metrics.length;
+            const centerX = x + size / 2;
+            const centerY = y + size / 2;
+            const radius = size * 0.4;
+            
+            // Draw grid circles
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 4; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, (radius * i) / 4, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw axes and labels
+            metrics.forEach((metric, i) => {
+                const angle = angleStep * i - Math.PI/2;
+                const x1 = centerX + Math.cos(angle) * radius;
+                const y1 = centerY + Math.sin(angle) * radius;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x1, y1);
+                ctx.stroke();
+                
+                // Label
+                const labelX = centerX + Math.cos(angle) * (radius + 15);
+                const labelY = centerY + Math.sin(angle) * (radius + 15);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(metric, labelX, labelY);
+            });
+            
+            // Draw model data
+            const modelColors = ['#00d9ff', '#b366ff', '#ff66d9'];
+            let modelIndex = 0;
+            
+            Object.entries(models).forEach(([modelName, values]) => {
+                ctx.strokeStyle = modelColors[modelIndex];
+                ctx.fillStyle = modelColors[modelIndex] + '20';
+                ctx.lineWidth = 2;
+                
+                ctx.beginPath();
+                values.forEach((value, i) => {
+                    const angle = angleStep * i - Math.PI/2;
+                    const distance = (value / 100) * radius;
+                    const px = centerX + Math.cos(angle) * distance;
+                    const py = centerY + Math.sin(angle) * distance;
+                    
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                });
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                
+                modelIndex++;
+            });
+            
+            // Legend
+            let legendY = y + size + 20;
+            modelIndex = 0;
+            Object.keys(models).forEach(modelName => {
+                ctx.fillStyle = modelColors[modelIndex];
+                ctx.fillRect(x, legendY, 10, 10);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(modelName, x + 15, legendY + 9);
+                
+                legendY += 15;
+                modelIndex++;
+            });
+        }
+        
+        function drawExportDemo(ctx, width, height) {
+            // Export & Model Management Demo
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(30, 70, width - 60, height - 150);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Export & Model Management', width / 2, 50);
+            
+            // Draw export format options
+            const formats = [
+                {name: 'JSON Config', desc: 'Model architecture & parameters', x: width * 0.2, y: height * 0.3},
+                {name: 'CSV Analytics', desc: 'Training metrics & results', x: width * 0.5, y: height * 0.3},
+                {name: 'PDF Report', desc: 'Comprehensive documentation', x: width * 0.8, y: height * 0.3},
+                {name: 'PNG Visualizations', desc: 'Charts and graphs', x: width * 0.35, y: height * 0.6},
+                {name: 'Model Weights', desc: 'Trained parameters (.pth)', x: width * 0.65, y: height * 0.6}
+            ];
+            
+            formats.forEach(format => {
+                drawExportOption(ctx, format.x, format.y, 100, 60, format.name, format.desc);
+            });
+            
+            // Draw learning progression tracking
+            ctx.fillStyle = '#b366ff';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Learning Progression', width * 0.25, height * 0.85);
+            
+            drawLearningProgression(ctx, width * 0.25, height * 0.85 + 20, 80);
+            
+            // Draw achievement badges
+            ctx.fillStyle = '#ff66d9';
+            ctx.fillText('Achievement Badges', width * 0.75, height * 0.85);
+            
+            drawAchievementBadges(ctx, width * 0.75, height * 0.85 + 20, 80);
+            
+            // Current export settings
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Format: ${gnnParameters.exportFormat || 'json'} | Model: ${gnnParameters.modelType || 'pretrained'}`, width / 2, height - 20);
+        }
+        
+        function drawExportOption(ctx, x, y, width, height, name, description) {
+            // Draw export option card
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.2)';
+            ctx.fillRect(x - width/2, y - height/2, width, height);
+            
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - width/2, y - height/2, width, height);
+            
+            // Icon placeholder
+            ctx.fillStyle = '#00d9ff';
+            ctx.fillRect(x - 20, y - 15, 40, 30);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(name.split(' ')[0], x, y + 5);
+            
+            // Description
+            ctx.fillStyle = '#c0c0c0';
+            ctx.font = '10px Arial';
+            ctx.fillText(name.split(' ').slice(1).join(' '), x, y + 20);
+            
+            ctx.fillText(description, x, y + 35);
+        }
+        
+        function drawLearningProgression(ctx, x, y, size) {
+            // Draw learning progression with milestones
+            const milestones = [
+                {name: 'Graph Theory', progress: 100, unlocked: true},
+                {name: 'GCN Basics', progress: 100, unlocked: true},
+                {name: 'GraphSAGE', progress: 75, unlocked: true},
+                {name: 'GAT Attention', progress: 45, unlocked: true},
+                {name: 'Advanced Apps', progress: 0, unlocked: false}
+            ];
+            
+            milestones.forEach((milestone, i) => {
+                const milestoneY = y + i * 15;
+                
+                // Progress bar background
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.fillRect(x, milestoneY, size, 8);
+                
+                // Progress bar fill
+                if (milestone.unlocked) {
+                    ctx.fillStyle = '#b366ff';
+                    ctx.fillRect(x, milestoneY, (size * milestone.progress) / 100, 8);
+                }
+                
+                // Checkmark or lock icon
+                ctx.fillStyle = milestone.unlocked ? '#00ff88' : '#ff6666';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(milestone.unlocked ? '✓' : '🔒', x - 20, milestoneY + 7);
+                
+                // Milestone name
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.fillText(milestone.name, x + size + 10, milestoneY + 7);
+            });
+        }
+        
+        function drawAchievementBadges(ctx, x, y, size) {
+            // Draw achievement badges
+            const badges = [
+                {name: 'First Pattern', icon: '🎯', earned: true},
+                {name: 'GCN Expert', icon: '🧠', earned: true},
+                {name: 'Multi-Task', icon: '🔄', earned: false},
+                {name: 'Explainability', icon: '💡', earned: false},
+                {name: 'Ensemble Master', icon: '🏆', earned: false}
+            ];
+            
+            badges.forEach((badge, i) => {
+                const badgeX = x + (i % 3) * 25;
+                const badgeY = y + Math.floor(i / 3) * 30;
+                
+                // Badge circle
+                ctx.fillStyle = badge.earned ? '#ffaa00' : 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(badgeX, badgeY, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Icon
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(badge.icon, badgeX, badgeY + 4);
+                
+                // Badge name
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '8px Arial';
+                ctx.fillText(badge.name, badgeX, badgeY + 20);
+            });
+        }
+        
+        function drawInfoBox(ctx, width, height, message) {
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+            ctx.fillRect(20, height - 80, width - 40, 60);
+            
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(20, height - 80, width - 40, 60);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            
+            // Word wrap the message
+            const words = message.split(' ');
+            const lineHeight = 16;
+            let x = 30;
+            let y = height - 60;
+            
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const textWidth = ctx.measureText(word + ' ').width;
+                
+                if (x + textWidth > width - 40) {
+                    x = 30;
+                    y += lineHeight;
+                }
+                
+                ctx.fillText(word, x, y);
+                x += textWidth;
+            }
+        }
+    </script>
+</body>
+</html>
