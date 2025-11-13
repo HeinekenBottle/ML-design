@@ -8,6 +8,9 @@ import { AnimationManager } from './AnimationManager.js';
 import { GraphGenerator } from './GraphGenerator.js';
 import { GraphBasics } from './lessons/GraphBasics.js';
 import { MessagePassing } from './lessons/MessagePassing.js';
+import { GNNArchitectures } from './lessons/GNNArchitectures.js';
+import { AggregationFunctions } from './lessons/AggregationFunctions.js';
+import { EducationalContent } from './EducationalContent.js';
 
 class GNNEducationalApp {
     constructor() {
@@ -82,7 +85,9 @@ class GNNEducationalApp {
     setupLessons() {
         this.lessons = {
             1: new GraphBasics(this.canvas, this.graphGenerator),
-            2: new MessagePassing(this.canvas, this.graphGenerator)
+            2: new MessagePassing(this.canvas, this.graphGenerator),
+            3: new GNNArchitectures(this.canvas, this.graphGenerator),
+            4: new AggregationFunctions(this.canvas, this.graphGenerator)
         };
     }
 
@@ -117,15 +122,27 @@ class GNNEducationalApp {
             // Message Passing
             const nodeCount = parseInt(document.getElementById('nodeCountSlider')?.value || 6);
             timeline = this.currentLesson.init(nodeCount);
+        } else if (lessonId === 3) {
+            // GNN Architectures
+            const architecture = document.querySelector('.architecture-btn.active')?.dataset.arch || 'GCN';
+            const nodeCount = 6;
+            timeline = this.currentLesson.init(architecture, nodeCount);
+        } else if (lessonId === 4) {
+            // Aggregation Functions
+            const aggregation = document.querySelector('.aggregation-btn.active')?.dataset.agg || 'mean';
+            const nodeCount = 6;
+            timeline = this.currentLesson.init(aggregation, nodeCount);
         }
-        
+
         // Register timeline with animation manager
         this.animationManager.start(timeline);
-        
+
         // Update UI
         this.updateLessonUI(lessonId);
         this.updatePlayPauseButton(false);
-        
+        this.updateEducationalContent(lessonId);
+        this.updateControlVisibility(lessonId);
+
         console.log(`Loaded Lesson ${lessonId}`);
     }
 
@@ -133,21 +150,168 @@ class GNNEducationalApp {
      * Update UI for current lesson
      */
     updateLessonUI(lessonId) {
-        // Update lesson title
-        const titles = {
-            1: 'Lesson 1: Graph Basics',
-            2: 'Lesson 2: Message Passing'
+        // Update lesson title and subtitle
+        const lessonData = {
+            1: { title: EducationalContent.lesson1.title, subtitle: EducationalContent.lesson1.subtitle },
+            2: { title: EducationalContent.lesson2.title, subtitle: EducationalContent.lesson2.subtitle },
+            3: { title: EducationalContent.lesson3.title, subtitle: EducationalContent.lesson3.subtitle },
+            4: { title: EducationalContent.lesson4.title, subtitle: EducationalContent.lesson4.subtitle }
         };
-        
+
         const titleEl = document.getElementById('lessonTitle');
-        if (titleEl) {
-            titleEl.textContent = titles[lessonId] || 'GNN Education';
+        const subtitleEl = document.getElementById('lessonSubtitle');
+
+        if (titleEl && lessonData[lessonId]) {
+            titleEl.textContent = lessonData[lessonId].title;
+        }
+
+        if (subtitleEl && lessonData[lessonId]) {
+            subtitleEl.textContent = lessonData[lessonId].subtitle;
         }
         
         // Update lesson buttons active state
         document.querySelectorAll('.lesson-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lesson == lessonId);
         });
+    }
+
+    /**
+     * Update educational content display
+     */
+    updateEducationalContent(lessonId) {
+        const lessonKey = `lesson${lessonId}`;
+        const content = EducationalContent[lessonKey];
+
+        if (!content) return;
+
+        // Update learning objectives
+        this.displayLearningObjectives(content);
+
+        // Update introduction/explanation
+        this.displayIntroduction(content);
+
+        // Update quiz
+        this.displayQuiz(content);
+
+        // Update summary
+        this.displaySummary(content);
+    }
+
+    /**
+     * Display learning objectives
+     */
+    displayLearningObjectives(content) {
+        const container = document.getElementById('learningObjectives');
+        if (!container) return;
+
+        let html = '<div class="learning-objectives">';
+        html += '<h4>🎯 Learning Objectives</h4>';
+        html += '<ul>';
+        content.learningObjectives.forEach(obj => {
+            html += `<li>${obj}</li>`;
+        });
+        html += '</ul>';
+        html += '</div>';
+        html += content.introduction;
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * Display introduction/explanation
+     */
+    displayIntroduction(content) {
+        const container = document.getElementById('phaseExplanation');
+        if (!container) return;
+
+        container.innerHTML = content.introduction;
+    }
+
+    /**
+     * Display quiz
+     */
+    displayQuiz(content) {
+        const container = document.getElementById('quizContent');
+        if (!container || !content.quiz) return;
+
+        let html = '<div class="quiz-section">';
+        html += '<h3>Test Your Understanding</h3>';
+
+        content.quiz.forEach((q, index) => {
+            html += `<div class="quiz-question">`;
+            html += `<p><strong>Question ${index + 1}:</strong> ${q.question}</p>`;
+            html += `<ul class="quiz-options">`;
+            q.options.forEach((option, optIndex) => {
+                html += `<li class="quiz-option" data-question="${index}" data-option="${optIndex}">${option}</li>`;
+            });
+            html += `</ul>`;
+            html += `<div class="quiz-explanation" id="explanation-${index}" style="display:none; margin-top:10px; padding:10px; background:rgba(0,217,255,0.1); border-radius:5px;"></div>`;
+            html += `</div>`;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Add click handlers for quiz options
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const questionIndex = parseInt(e.target.dataset.question);
+                const optionIndex = parseInt(e.target.dataset.option);
+                const question = content.quiz[questionIndex];
+
+                // Remove previous selections
+                document.querySelectorAll(`[data-question="${questionIndex}"]`).forEach(opt => {
+                    opt.classList.remove('correct', 'incorrect');
+                });
+
+                // Mark correct/incorrect
+                if (optionIndex === question.correct) {
+                    e.target.classList.add('correct');
+                } else {
+                    e.target.classList.add('incorrect');
+                }
+
+                // Show explanation
+                const explanationEl = document.getElementById(`explanation-${questionIndex}`);
+                if (explanationEl) {
+                    explanationEl.style.display = 'block';
+                    explanationEl.innerHTML = `<strong>Explanation:</strong> ${question.explanation}`;
+                }
+            });
+        });
+    }
+
+    /**
+     * Display summary
+     */
+    displaySummary(content) {
+        const container = document.getElementById('summaryContent');
+        if (!container) return;
+
+        container.innerHTML = `<div class="summary-box">${content.summary}</div>`;
+    }
+
+    /**
+     * Update control visibility based on lesson
+     */
+    updateControlVisibility(lessonId) {
+        const graphControls = document.getElementById('graphControls');
+        const architectureControls = document.getElementById('architectureControls');
+        const aggregationControls = document.getElementById('aggregationControls');
+
+        // Hide all first
+        if (graphControls) graphControls.style.display = 'none';
+        if (architectureControls) architectureControls.style.display = 'none';
+        if (aggregationControls) aggregationControls.style.display = 'none';
+
+        // Show relevant controls
+        if (lessonId === 1 || lessonId === 2) {
+            if (graphControls) graphControls.style.display = 'block';
+        } else if (lessonId === 3) {
+            if (architectureControls) architectureControls.style.display = 'block';
+        } else if (lessonId === 4) {
+            if (aggregationControls) aggregationControls.style.display = 'block';
+        }
     }
 
     /**
@@ -214,7 +378,7 @@ class GNNEducationalApp {
             nodeCountSlider.addEventListener('change', () => {
                 this.loadLesson(this.currentLessonId);
             });
-            
+
             // Update slider value display
             nodeCountSlider.addEventListener('input', (e) => {
                 const valueDisplay = document.getElementById('nodeCountValue');
@@ -223,6 +387,50 @@ class GNNEducationalApp {
                 }
             });
         }
+
+        // Architecture selector buttons (Lesson 3)
+        document.querySelectorAll('.architecture-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.architecture-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                if (this.currentLessonId === 3) {
+                    this.loadLesson(3);
+                }
+            });
+        });
+
+        // Aggregation selector buttons (Lesson 4)
+        document.querySelectorAll('.aggregation-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.aggregation-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                if (this.currentLessonId === 4) {
+                    this.loadLesson(4);
+                }
+            });
+        });
+
+        // Content tabs
+        document.querySelectorAll('.content-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const tabName = e.target.dataset.tab;
+
+                // Update active tab
+                document.querySelectorAll('.content-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+
+                // Show corresponding content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                const contentId = tabName + 'Tab';
+                const contentEl = document.getElementById(contentId);
+                if (contentEl) {
+                    contentEl.classList.add('active');
+                }
+            });
+        });
     }
 
     /**
