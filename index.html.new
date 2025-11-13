@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNN Educational Interface - Interactive Learning</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🧠 Graph Neural Networks Education</h1>
+            <p>Interactive visualization for learning GNN concepts step-by-step</p>
+        </header>
+
+        <!-- Lesson Selector -->
+        <div class="lesson-selector">
+            <button class="lesson-btn active" data-lesson="1">
+                Lesson 1: Graph Basics
+            </button>
+            <button class="lesson-btn" data-lesson="2">
+                Lesson 2: Message Passing
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Canvas Section -->
+            <div class="canvas-section">
+                <h2 id="lessonTitle">Lesson 1: Graph Basics</h2>
+                <div class="canvas-container">
+                    <canvas id="canvas"></canvas>
+                    <div class="canvas-overlay">
+                        <p id="animationDescription">Click Play to start the animation</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Panel -->
+            <aside class="controls-panel">
+                <!-- Animation Controls -->
+                <div class="control-section">
+                    <h3>⏯️ Animation Controls</h3>
+                    <div class="animation-controls">
+                        <div class="control-row">
+                            <button id="playPauseBtn" class="btn btn-primary">
+                                <span class="icon">▶</span> Play
+                            </button>
+                            <button id="resetBtn" class="btn">
+                                <span class="icon">↺</span> Reset
+                            </button>
+                        </div>
+                        <div class="control-row">
+                            <button id="prevStepBtn" class="btn">
+                                <span class="icon">⏮</span> Step Back
+                            </button>
+                            <button id="nextStepBtn" class="btn">
+                                <span class="icon">⏭</span> Step Forward
+                            </button>
+                        </div>
+                        <div class="speed-controls mt-10">
+                            <label>Speed:</label>
+                            <button class="btn btn-small speed-btn" data-speed="0.5">0.5x</button>
+                            <button class="btn btn-small speed-btn active" data-speed="1.0">1x</button>
+                            <button class="btn btn-small speed-btn" data-speed="2.0">2x</button>
+                        </div>
+                        <div class="phase-indicator mt-10">
+                            <strong>Phase:</strong> <span id="currentPhase">Ready</span>
+                            <div class="phase-progress-bar">
+                                <div class="phase-progress-fill" id="phaseProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graph Controls -->
+                <div class="control-section">
+                    <h3>🎨 Graph Settings</h3>
+                    <div class="graph-controls">
+                        <div class="control-group">
+                            <label for="graphType">Graph Type</label>
+                            <select id="graphType">
+                                <option value="ring">Ring (Circle)</option>
+                                <option value="star">Star (Hub)</option>
+                                <option value="complete">Complete (All Connected)</option>
+                                <option value="random">Random</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="nodeCountSlider">Number of Nodes</label>
+                            <input type="range" id="nodeCountSlider" min="3" max="12" value="8" step="1">
+                            <div class="slider-value">
+                                <span>Nodes:</span>
+                                <span id="nodeCountValue">8</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Help -->
+                <div class="control-section">
+                    <h3>💡 Quick Help</h3>
+                    <p style="color: #c0c0c0; font-size: 0.9em; line-height: 1.6;">
+                        <strong style="color: #00d9ff;">Play/Pause:</strong> Control animation playback<br>
+                        <strong style="color: #00d9ff;">Step:</strong> Move forward/backward 0.5s<br>
+                        <strong style="color: #00d9ff;">Reset:</strong> Restart from beginning<br>
+                        <strong style="color: #00d9ff;">Speed:</strong> Adjust playback speed
+                    </p>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Information Section -->
+        <section class="info-section">
+            <h2>📚 About This Interface</h2>
+            
+            <h3>Lesson 1: Graph Basics</h3>
+            <p>
+                Learn the fundamental building blocks of graphs:
+            </p>
+            <ul>
+                <li><strong>Nodes (Vertices):</strong> Individual entities in the graph</li>
+                <li><strong>Edges:</strong> Connections between nodes</li>
+                <li><strong>Features:</strong> Data associated with each node</li>
+                <li><strong>Graph Structure:</strong> How nodes are connected (topology)</li>
+            </ul>
+
+            <h3>Lesson 2: Message Passing</h3>
+            <p>
+                Understand how Graph Neural Networks work through the message passing framework:
+            </p>
+            <ul>
+                <li><strong>Phase 1 - Preparation:</strong> Identify source and target nodes</li>
+                <li><strong>Phase 2 - Sending:</strong> Messages travel along edges</li>
+                <li><strong>Phase 3 - Aggregation:</strong> Combine messages from neighbors</li>
+                <li><strong>Phase 4 - Update:</strong> Update node features with aggregated information</li>
+            </ul>
+
+            <h3>Bug Fixes Implemented</h3>
+            <p>
+                This refactored version fixes all 6 critical bugs identified in the audit:
+            </p>
+            <ul>
+                <li>✅ <strong>Bug #1:</strong> Animation glitches - Fixed with centralized AnimationManager</li>
+                <li>✅ <strong>Bug #2:</strong> Non-functional Reset button - Now properly stops and restarts animations</li>
+                <li>✅ <strong>Bug #3:</strong> Non-responsive Next Step button - Works in all lessons with 500ms steps</li>
+                <li>✅ <strong>Bug #4:</strong> Canvas rendering failures - Proper DPR scaling for all displays</li>
+                <li>✅ <strong>Bug #5:</strong> Graph loading failures - Validates connectivity and fixes disconnected graphs</li>
+                <li>✅ <strong>Bug #6:</strong> Play/Pause inconsistency - State properly managed across all animations</li>
+            </ul>
+
+            <h3>Technical Implementation</h3>
+            <p>
+                Built with modern web technologies:
+            </p>
+            <ul>
+                <li><strong>ES6+ JavaScript Modules:</strong> Modular, maintainable code structure</li>
+                <li><strong>HTML5 Canvas:</strong> High-performance 2D graphics rendering</li>
+                <li><strong>CSS3:</strong> Modern styling with animations and responsive design</li>
+                <li><strong>Timeline-based Animation:</strong> Smooth, controllable animations with phases</li>
+                <li><strong>No Frameworks:</strong> Pure vanilla JavaScript for lightweight performance</li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- Load JavaScript as ES6 Module -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
